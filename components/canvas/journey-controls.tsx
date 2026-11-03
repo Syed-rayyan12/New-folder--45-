@@ -45,21 +45,15 @@ export function JourneyControls() {
     flight.current.progress = 1
     const control = controls.current
     if (camera instanceof OrthographicCamera) {
-      camera.zoom = zoomCommand.action === 'reset' ? fitZoom : Math.max(fitZoom * 0.35, Math.min(fitZoom * 50, camera.zoom * (zoomCommand.action === 'in' ? 1.15 : 1 / 1.15)))
-      if (zoomCommand.action === 'reset') { control.target.set(0, 0, 0); camera.position.set(0, 0, 20) }
+      camera.zoom = Math.max(fitZoom * 0.35, Math.min(fitZoom * 50, camera.zoom * (zoomCommand.action === 'in' ? 1.15 : 1 / 1.15)))
       camera.updateProjectionMatrix()
       control.update()
       return
     }
     const offset = camera.position.clone().sub(control.target)
-    if (zoomCommand.action === 'reset') {
-      control.target.set(0, 0, 0)
-      camera.position.copy(flat ? new Vector3(0, 0, 1).normalize().multiplyScalar(fitDistance()) : new Vector3(0, 0.7, 7.8))
-    } else {
-      const distance = offset.length()
-      const next = Math.max(flat ? 0.3 : GLOBE_RADIUS + 0.15, Math.min(flat ? 70 : 18, distance * (zoomCommand.action === 'in' ? 1 / 1.15 : 1.15)))
-      camera.position.copy(control.target).add(offset.multiplyScalar(next / distance))
-    }
+    const distance = offset.length()
+    const next = Math.max(GLOBE_RADIUS + 0.15, Math.min(18, distance * (zoomCommand.action === 'in' ? 1 / 1.15 : 1.15)))
+    camera.position.copy(control.target).add(offset.multiplyScalar(next / distance))
     control.update()
   }, [zoomCommand])
   useFrame((_, delta) => {

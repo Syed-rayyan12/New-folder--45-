@@ -46,14 +46,15 @@ function Look({ index, seed }: { index: number; seed: number }) {
     root.current.scale.setScalar(Math.max(.001,scale))
   })
   const active=index===selected
-  return <group ref={root} scale={.001} onClick={e=>{e.stopPropagation();select(index);useJourney.setState({editorOpen:true})}}>
+  return <group ref={root} visible={stage === 'world' || active} scale={.001} onClick={e=>{e.stopPropagation();select(index);useJourney.setState({editorOpen:true})}}>
     <RealisticGarment kind={garment.kind} color={garment.color} />
-    {(stage==='world' || !active) && <group position={[-.28,.55,.335]} scale={.12}><EmblemStamp seed={seed} /></group>}
+    {stage==='world' && active && <group position={[-.28,.55,.335]} scale={.12}><EmblemStamp seed={seed} /></group>}
   </group>
 }
 
 export function GarmentWorldScene({ seed }: { seed: number }) {
-  return <group>
+  const editorOpen = useJourney(s => s.editorOpen)
+  return <group visible={!editorOpen}>
     <pointLight position={[0,2,3]} color="#ffffff" intensity={8} distance={9} />
     <pointLight position={[-3,1,-1]} color="#aecbff" intensity={9} distance={8} />
     <mesh rotation={[-Math.PI/2,0,0]} position={[0,-1.85,0]}>

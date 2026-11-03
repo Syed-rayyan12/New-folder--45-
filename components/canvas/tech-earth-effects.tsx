@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { AdditiveBlending, BufferAttribute, BufferGeometry, CanvasTexture, CatmullRomCurve3, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, SRGBColorSpace, TubeGeometry, Vector3 } from 'three'
 import type { Location } from '@/lib/locations'
 import { mapPosition, routeSegments } from '@/lib/geo'
+import { COORDINATE_COLOR } from '@/lib/palette'
 import { useJourney } from '@/lib/store'
 import { TECH_EARTH_LOCATIONS, TECH_FLIGHT_PAIRS } from '@/lib/tech-earth-locations'
 
@@ -33,11 +34,11 @@ export function TechPlaceEffect({ place, selected }: { place: Location; selected
   })
   return <>
     <group position={mapPosition(place.lat,place.lng,2.012,mapView)} quaternion={rotation} raycast={()=>{}}>
-      <mesh scale={.12}><planeGeometry args={[1,1]}/><meshBasicMaterial map={aperture} color="#76ff76" transparent depthWrite={false} blending={AdditiveBlending}/></mesh>
-      <mesh ref={wave} scale={.12}><planeGeometry args={[1,1]}/><meshBasicMaterial ref={waveMaterial} map={aperture} color="#76ff76" transparent depthWrite={false} blending={AdditiveBlending}/></mesh>
-      {mapView !== 'flat' && [0,Math.PI/2].map(angle=><group key={angle} rotation={[0,0,angle]}><mesh position={[0,0,.22]} rotation={[Math.PI/2,0,0]}><planeGeometry args={[.045,.44]}/><meshBasicMaterial map={pillar} color={selected?'#76ff76':'#76ff76'} transparent opacity={selected?.85:.55} depthWrite={false} side={DoubleSide} blending={AdditiveBlending}/></mesh></group>)}
+      <mesh scale={.12}><planeGeometry args={[1,1]}/><meshBasicMaterial map={aperture} color={COORDINATE_COLOR} transparent depthWrite={false} blending={AdditiveBlending}/></mesh>
+      <mesh ref={wave} scale={.12}><planeGeometry args={[1,1]}/><meshBasicMaterial ref={waveMaterial} map={aperture} color={COORDINATE_COLOR} transparent depthWrite={false} blending={AdditiveBlending}/></mesh>
+      {mapView !== 'flat' && [0,Math.PI/2].map(angle=><group key={angle} rotation={[0,0,angle]}><mesh position={[0,0,.22]} rotation={[Math.PI/2,0,0]}><planeGeometry args={[.045,.44]}/><meshBasicMaterial map={pillar} color={COORDINATE_COLOR} transparent opacity={selected?.85:.55} depthWrite={false} side={DoubleSide} blending={AdditiveBlending}/></mesh></group>)}
     </group>
-    {!selected&&<sprite position={mapPosition(place.lat,place.lng,2.22,mapView)} scale={[Math.min(.62,.24+place.name.length*.023),.12,1]} raycast={()=>{}}><spriteMaterial map={label} transparent depthWrite={false} toneMapped={false}/></sprite>}
+    {mapView !== 'flat' && !selected&&<sprite position={mapPosition(place.lat,place.lng,2.22,mapView)} scale={[Math.min(.62,.24+place.name.length*.023),.12,1]} raycast={()=>{}}><spriteMaterial map={label} transparent depthWrite={false} toneMapped={false}/></sprite>}
   </>
 }
 
@@ -54,7 +55,7 @@ function Flight({ points, index }: { points: Vector3[]; index: number }) {
   const uniforms=useMemo(()=>({uTravel:{value:index*.13},uDpr:{value:dpr}}),[index,dpr])
   useFrame((_,delta)=>{if(!reduced)uniforms.uTravel.value=(uniforms.uTravel.value+Math.min(delta,.05)*.17)%1})
   return <group raycast={()=>{}}>
-    <mesh geometry={geometry.base}><meshBasicMaterial color="#76ff76" transparent opacity={.55}/></mesh>
+    <mesh geometry={geometry.base}><meshBasicMaterial color={COORDINATE_COLOR} transparent opacity={.55}/></mesh>
     <points geometry={geometry.tail}><shaderMaterial transparent depthWrite={false} blending={AdditiveBlending} uniforms={uniforms}
       vertexShader={`attribute float aFraction;uniform float uTravel;uniform float uDpr;varying float vAlpha;
         void main(){float trail=fract(uTravel-aFraction);vAlpha=1.-smoothstep(0.,.13,trail);vec4 mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp((2.+vAlpha*5.)*uDpr*5./max(1.,-mv.z),1.,10.);}`}

@@ -42,6 +42,6 @@ export const atmosphereFragment = `
     vec3 worldCameraToVertex=vVertexWorldPosition-cameraPosition;
     vec3 viewCameraToVertex=normalize((viewMatrix*vec4(worldCameraToVertex,0.)).xyz);
     float intensity=pow(max(0.,1.+dot(normalize(vVertexNormal),viewCameraToVertex)),3.);
-    gl_FragColor=vec4(.463,1.,.463,intensity*.45);
+    gl_FragColor=vec4(.40392,.94510,.38824,intensity*.45);
   }
 `

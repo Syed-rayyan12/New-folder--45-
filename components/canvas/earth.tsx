@@ -6,17 +6,21 @@ import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, Group, PlaneG
 import { useJourney } from '@/lib/store'
 import { techEarthVertex, techEarthFragment, atmosphereVertex, atmosphereFragment } from '@/lib/ghostcat-earth-shaders'
 import { LocalTextureLoader } from '@/lib/local-texture-loader'
+import { GLOBE_COLOR } from '@/lib/palette'
 import { flatPosition } from '@/lib/geo'
 
-// Match the globe's opaque texture and green hue on the curved map silhouette.
+// Solid continents in the globe's palette, with genuinely transparent oceans.
 const flatFragment = `
   uniform sampler2D map;
+  uniform sampler2D landMask;
   uniform vec3 glowColor;
   varying vec2 vUv;
   void main() {
     vec3 source = texture2D(map, vUv).rgb;
+    float land = 1.0 - smoothstep(0.15, 0.7, texture2D(landMask, vUv).r);
+    if (land < 0.02) discard;
     float detail = max(source.r, max(source.g, source.b));
-    gl_FragColor = vec4(glowColor * detail, 1.0);
+    gl_FragColor = vec4(glowColor * max(detail, 0.22), land);
   }
 `
 
@@ -26,7 +30,7 @@ function OrbitalRing({ radius, tilt, color, offset }: { radius: number; tilt: nu
   useFrame((_, delta) => { if (orbit.current && !reduced) orbit.current.rotation.y += Math.min(delta,.05)*.18 })
   return <group rotation={[0,0,tilt]}>
     <group ref={orbit} rotation={[0,offset,0]}>
-      <mesh rotation={[Math.PI/2,0,0]} raycast={() => {}}><torusGeometry args={[radius,.0025,4,160]}/><meshBasicMaterial color="#76ff76" transparent opacity={.42} depthWrite={false}/></mesh>
+      <mesh rotation={[Math.PI/2,0,0]} raycast={() => {}}><torusGeometry args={[radius,.0025,4,160]}/><meshBasicMaterial color={GLOBE_COLOR} transparent opacity={.42} depthWrite={false}/></mesh>
       {[0,Math.PI].map(a=><mesh key={a} position={[Math.cos(a)*radius,0,Math.sin(a)*radius]} raycast={() => {}}><sphereGeometry args={[.035,12,10]}/><meshBasicMaterial color={color} toneMapped={false}/></mesh>)}
     </group>
   </group>
@@ -37,10 +41,10 @@ export const Earth = memo(function Earth() {
   const mapView = useJourney(s => s.mapView)
   const isMobile = useJourney(s => s.isMobile)
   const reduced = useJourney(s => s.reducedMotion)
-  const [map, glow] = useLoader(LocalTextureLoader,[`/vendor/ghostcat-earth/earth-${isMobile?2048:4096}.jpg`,'/vendor/ghostcat-earth/glow.png'])
+  const [map, glow, landMask] = useLoader(LocalTextureLoader,[`/vendor/ghostcat-earth/earth-${isMobile?2048:4096}.jpg`,'/vendor/ghostcat-earth/glow.png','/textures/earth-specular.jpg'])
   const uniforms = useMemo(()=>({
-    map:{value:map},glowColor:{value:new Color('#76ff76')},scale:{value:-1},bias:{value:1},power:{value:3.3},time:{value:100},
-  }),[map])
+    map:{value:map},landMask:{value:landMask},glowColor:{value:new Color(GLOBE_COLOR)},scale:{value:-1},bias:{value:1},power:{value:3.3},time:{value:100},
+  }),[map,landMask])
   const elapsed = useRef(0)
   const flatGeometry = useMemo(() => {
     const surface = new PlaneGeometry(1, 1, 240, 120)
@@ -65,18 +69,18 @@ export const Earth = memo(function Earth() {
   useEffect(()=>()=>geometry.dispose(),[geometry])
   useFrame((_,delta)=>{if(!reduced){elapsed.current+=Math.min(delta,.05);uniforms.time.value=100-(elapsed.current*20)%200}})
   if (mapView === 'flat') return <mesh geometry={flatGeometry} raycast={() => {}}>
-    <shaderMaterial uniforms={uniforms} vertexShader={techEarthVertex} fragmentShader={flatFragment} toneMapped={false} />
+    <shaderMaterial uniforms={uniforms} vertexShader={techEarthVertex} fragmentShader={flatFragment} transparent depthWrite={false} toneMapped={false} />
   </mesh>
   return <group>
     <mesh onPointerOver={e=>e.stopPropagation()} onPointerMove={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()}>
       <sphereGeometry args={[2,isMobile?48:64,isMobile?40:64]}/>
       <shaderMaterial uniforms={uniforms} vertexShader={techEarthVertex} fragmentShader={techEarthFragment} toneMapped={false}/>
     </mesh>
-    <sprite scale={[4.3,4.3,1]} raycast={()=>{}}><spriteMaterial map={glow} color="#76ff76" transparent opacity={.1} depthWrite={false} blending={AdditiveBlending}/></sprite>
+    <sprite scale={[4.3,4.3,1]} raycast={()=>{}}><spriteMaterial map={glow} color={GLOBE_COLOR} transparent opacity={.1} depthWrite={false} blending={AdditiveBlending}/></sprite>
     <mesh raycast={()=>{}}><sphereGeometry args={[2.002,48,40]}/><shaderMaterial vertexShader={atmosphereVertex} fragmentShader={atmosphereFragment} transparent depthWrite={false}/></mesh>
-    <points geometry={geometry} raycast={()=>{}}><pointsMaterial color="#76ff76" size={.012} transparent opacity={.2} depthWrite={false} blending={AdditiveBlending}/></points>
-    <OrbitalRing radius={2.6} tilt={0} color="#76ff76" offset={.3}/>
-    <OrbitalRing radius={3.12} tilt={Math.PI/6} color="#76ff76" offset={2.1}/>
-    <OrbitalRing radius={2.08} tilt={-Math.PI/6} color="#76ff76" offset={4}/>
+    <points geometry={geometry} raycast={()=>{}}><pointsMaterial color={GLOBE_COLOR} size={.012} transparent opacity={.2} depthWrite={false} blending={AdditiveBlending}/></points>
+    <OrbitalRing radius={2.6} tilt={0} color={GLOBE_COLOR} offset={.3}/>
+    <OrbitalRing radius={3.12} tilt={Math.PI/6} color={GLOBE_COLOR} offset={2.1}/>
+    <OrbitalRing radius={2.08} tilt={-Math.PI/6} color={GLOBE_COLOR} offset={4}/>
   </group>
 })

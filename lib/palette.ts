@@ -5,6 +5,8 @@
  */
 export const BLACK = '#000000' as const
 export const SIGNAL = '#76FF76' as const
+export const GLOBE_COLOR = '#67F163' as const
+export const COORDINATE_COLOR = '#8A908C' as const
 
 export const OPACITY = {
   ghost: 0.1,

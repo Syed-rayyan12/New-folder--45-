@@ -7,14 +7,12 @@ const DEG = Math.PI / 180
 type LatLng = { lat: number; lng: number }
 
 export type MapView = 'globe' | 'flat'
-// Equal Earth polynomial, shared by the surface, markers and route samples.
-// Formula reference: https://github.com/d3/d3-geo/blob/main/src/projection/equalEarth.js
+// A conventional 2:1 world layout. The shared projection keeps dots and routes
+// aligned; the surface's land mask removes the rectangular ocean background.
 export function flatPosition(lat: number, lng: number, height = 0) {
-  const theta = Math.asin(Math.sqrt(3) / 2 * Math.sin(lat * DEG))
-  const t2 = theta * theta, t6 = t2 * t2 * t2
   return new Vector3(
-    GLOBE_RADIUS * lng * DEG * Math.cos(theta) / (Math.sqrt(3) / 2 * (1.340264 - 3 * 0.081106 * t2 + t6 * (7 * 0.000893 + 9 * 0.003796 * t2))),
-    GLOBE_RADIUS * theta * (1.340264 - 0.081106 * t2 + t6 * (0.000893 + 0.003796 * t2)),
+    GLOBE_RADIUS * lng * DEG,
+    GLOBE_RADIUS * lat * DEG,
     height,
   )
 }
@@ -25,9 +23,15 @@ export function mapPosition(lat: number, lng: number, radius: number, view: MapV
   return view === 'globe' ? latLngToVector3(lat, lng, radius) : flatPosition(lat, lng, radius - GLOBE_RADIUS)
 }
 
-/** Keep the geographic path unchanged, splitting at the curved date-line edges. */
+/** Keep the geographic path unchanged, splitting at the date-line edges. */
 export function routeSegments(from: LatLng, to: LatLng, view: MapView, lift = 0.16) {
-  const samples = arcPoints(latLngToVector3(from.lat, from.lng, 2.025), latLngToVector3(to.lat, to.lng, 2.025), 180, lift)
+  const bothPoles = Math.abs(from.lat) > 89.999999 && Math.abs(to.lat) > 89.999999
+  const longitudeSpan = ((to.lng - from.lng + 540) % 360) - 180
+  // Antipodal poles have no unique great-circle meridian. Use the supplied
+  // longitudes so the flat route does not jump sideways at a pinned endpoint.
+  const samples = view === 'flat' && bothPoles
+    ? Array.from({ length: 181 }, (_, i) => latLngToVector3(from.lat + (to.lat - from.lat) * i / 180, from.lng + longitudeSpan * i / 180, 2.025))
+    : arcPoints(latLngToVector3(from.lat, from.lng, 2.025), latLngToVector3(to.lat, to.lng, 2.025), 180, lift)
   if (view === 'globe') return [samples]
   const segments: Vector3[][] = [[]]
   let previous: { lat: number; lng: number; height: number } | null = null
@@ -35,7 +39,7 @@ export function routeSegments(from: LatLng, to: LatLng, view: MapView, lift = 0.
     const coordinate = {
       lat: Math.asin(Math.max(-1, Math.min(1, sample.y / sample.length()))) / DEG,
       lng: Math.atan2(-sample.z, sample.x) / DEG,
-      height: (sample.length() - GLOBE_RADIUS) * 0.18,
+      height: 0.025,
     }
     if (previous && Math.abs(coordinate.lng - previous.lng) > 180) {
       const edge = previous.lng > 0 ? 180 : -180

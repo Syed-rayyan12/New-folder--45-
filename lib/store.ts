@@ -4,6 +4,7 @@ import { wrapGarment, type WorldSection } from './garment-world'
 import { hashString } from './mark'
 import { GALAXY_BACKGROUNDS } from './galaxy-backgrounds'
 import type { MapView } from './geo'
+import { journeySelection, type JourneyStep } from './journey-flow'
 
 export type Stage = 'intro' | 'network' | 'q1' | 'q2' | 'reveal' | 'garment' | 'world'
 export type Lighting = 'day' | 'night'
@@ -21,10 +22,16 @@ export const STAGE_LABELS: Record<Stage, string> = {
 }
 
 type JourneyState = {
+  mockupId: string
+  mockupColor: string
+  setMockup: (id: string) => void
+  setMockupColor: (color: string) => void
+  journeyStep: JourneyStep
+  editJourney: (kind: 'origin' | 'destination') => void
   mapView: MapView
   setMapView: (view: MapView) => void
-  zoomCommand: { action: 'in' | 'out' | 'reset'; sequence: number }
-  zoomMap: (action: 'in' | 'out' | 'reset') => void
+  zoomCommand: { action: 'in' | 'out'; sequence: number }
+  zoomMap: (action: 'in' | 'out') => void
   editorOpen: boolean
   ready: boolean
   stage: Stage
@@ -36,6 +43,7 @@ type JourneyState = {
   isMobile: boolean
   emblemReady: boolean
   emblemSeed: number
+  emblemGeneration: number
   backgroundId: string
   backgroundStatus: 'ready' | 'loading' | 'error'
   setBackground: (id: string) => void
@@ -55,9 +63,15 @@ type JourneyState = {
 }
 
 export const useJourney = create<JourneyState>((set, get) => ({
-  mapView: 'globe',
+  mockupId: 'original-tank',
+  mockupColor: 'original',
+  setMockup: (mockupId) => set({mockupId}),
+  setMockupColor: (mockupColor) => set({mockupColor}),
+  journeyStep: 'origin',
+  editJourney: (kind) => set(s => ({ journeyStep: kind === 'destination' && s.origin ? 'destination' : 'origin', stage: kind === 'destination' && s.origin ? 'q2' : 'q1', hovered: null })),
+  mapView: 'flat',
   setMapView: (mapView) => set({ mapView, hovered: null }),
-  zoomCommand: { action: 'reset', sequence: 0 },
+  zoomCommand: { action: 'in', sequence: 0 },
   zoomMap: (action) => set(s => ({ zoomCommand: { action, sequence: s.zoomCommand.sequence + 1 } })),
   editorOpen: false,
   ready: false,
@@ -70,6 +84,7 @@ export const useJourney = create<JourneyState>((set, get) => ({
   isMobile: false,
   emblemReady: false,
   emblemSeed: 0,
+  emblemGeneration: 0,
   backgroundId: GALAXY_BACKGROUNDS[0].id,
   backgroundStatus: 'ready',
   setBackground: (id) => {
@@ -83,24 +98,23 @@ export const useJourney = create<JourneyState>((set, get) => ({
   setWorldSection: (worldSection) => set({ worldSection }),
   setReady: () => set({ ready: true }),
   setStage: (stage) => {
+    if (stage === 'reveal' && get().journeyStep !== 'connected') return
     if ((stage === 'reveal' || stage === 'garment' || stage === 'world') && (!get().origin || !get().destination)) return
     const current = get()
     const creating = stage === 'reveal' && current.stage !== 'reveal'
-    const freshSeed = creating ? hashString(`${current.origin}|${current.destination}|${globalThis.crypto.getRandomValues(new Uint32Array(1))[0]}`) : current.emblemSeed
+    const freshSeed = creating ? hashString(`${current.origin}|${current.destination}|${current.emblemGeneration+1}|${globalThis.crypto.getRandomValues(new Uint32Array(1))[0]}`) : current.emblemSeed
     // Cycle the design family while varying details within it on each creation.
     const emblemSeed = creating ? ((freshSeed & 0xfffffffc) | ((current.emblemSeed + 1) & 3)) >>> 0 : current.emblemSeed
-    set({ stage, hovered: null, ...(creating ? { emblemSeed, emblemReady: false, garmentIndex: 0, worldSection: 'Collection' as const } : {}) })
+    set({ stage, hovered: null, ...(creating ? { emblemSeed, emblemGeneration:current.emblemGeneration+1, emblemReady: false, garmentIndex: 0, worldSection: 'Collection' as const } : {}) })
   },
   selectLocation: (id) => {
-    const { stage, origin } = get()
-    if (stage === 'q1') {
-      set((s) => ({ origin: id, destination: s.destination === id ? null : s.destination }))
-    } else if (stage === 'q2' && id !== origin) {
-      set({ destination: id })
-    }
+    const s = get()
+    if (s.stage === 'reveal' || s.stage === 'garment' || s.stage === 'world') return
+    const selection = journeySelection(s.journeyStep, id, s.origin)
+    if (selection) set({ ...selection, hovered: null })
   },
   setHovered: (hovered) => set({ hovered }),
   setLighting: (lighting) => set({ lighting }),
   setEnvironment: (env) => set(env),
-  restart: () => set({ editorOpen: false, stage: 'q1', origin: null, destination: null, hovered: null, lighting: 'night', emblemReady: false, garmentIndex: 0, worldSection: 'Collection' }),
+  restart: () => set({ editorOpen: false, journeyStep: 'origin', stage: 'q1', origin: null, destination: null, hovered: null, lighting: 'night', emblemReady: false, garmentIndex: 0, worldSection: 'Collection' }),
 }))

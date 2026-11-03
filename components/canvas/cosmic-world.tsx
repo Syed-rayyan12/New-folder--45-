@@ -3,16 +3,17 @@
 import { Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { Group, Quaternion } from 'three'
+import { Group, Mesh, OrthographicCamera, Quaternion } from 'three'
 import { mapPosition, routeSegments } from '@/lib/geo'
 import { getLocation, LOCATIONS, type Location } from '@/lib/locations'
 import { useJourney } from '@/lib/store'
+import { COORDINATE_COLOR } from '@/lib/palette'
 import { journeyOrientation } from '@/lib/globe-focus'
 import { Earth } from './earth'
 import { AnimatedRoute } from './animated-route'
 import { AssemblingEmblem } from './assembling-emblem'
-import { GarmentWorldScene } from './garment-world-scene'
-import { TechFlightNetwork, TechPlaceEffect } from './tech-earth-effects'
+
+import { TechPlaceEffect } from './tech-earth-effects'
 import { TECH_EARTH_LOCATIONS } from '@/lib/tech-earth-locations'
 
 function PlaceMarker({ place, selected }: { place: Location; selected: boolean }) {
@@ -23,28 +24,38 @@ function PlaceMarker({ place, selected }: { place: Location; selected: boolean }
   const active = hovered === place.id
   const mapView = useJourney(s => s.mapView)
   const position = mapPosition(place.lat, place.lng, 2.025, mapView)
+  const dot = useRef<Mesh>(null)
+  const halo = useRef<Mesh>(null)
+  const hit = useRef<Mesh>(null)
+  useFrame(state => {
+    const camera = state.camera
+    const scale = mapView === 'flat' && camera instanceof OrthographicCamera ? 3 / (camera.zoom * 0.018) : 1
+    dot.current?.scale.setScalar(scale)
+    halo.current?.scale.setScalar(scale)
+    hit.current?.scale.setScalar(mapView === 'flat' && camera instanceof OrthographicCamera ? 9 / (camera.zoom * 0.065) : 1)
+  })
   return <group>
     <TechPlaceEffect place={place} selected={selected || active} />
     <group position={position}>
-    <mesh onPointerOver={(e) => { e.stopPropagation(); setHovered(place.id) }} onPointerOut={() => { if (useJourney.getState().hovered === place.id) setHovered(null) }} onClick={(e) => {
+    <mesh ref={hit} onPointerOver={(e) => { e.stopPropagation(); setHovered(place.id) }} onPointerOut={() => { if (useJourney.getState().hovered === place.id) setHovered(null) }} onClick={(e) => {
       e.stopPropagation()
       if (stage === 'reveal') return
-      if (!origin || stage === 'q1') useJourney.setState({ origin: place.id, stage: 'q2', ...(useJourney.getState().destination === place.id ? { destination: null } : {}) })
-      else if (origin !== place.id) useJourney.setState({ destination: place.id, stage: 'q2' })
+      useJourney.getState().selectLocation(place.id)
     }}>
       <sphereGeometry args={[0.065, 12, 12]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} />
     </mesh>
-    <mesh raycast={() => {}}><sphereGeometry args={[active ? 0.03 : selected ? 0.025 : 0.016, 16, 16]} /><meshBasicMaterial color="#76ff76" toneMapped={false} /></mesh>
-    <mesh raycast={() => {}}><sphereGeometry args={[selected || active ? 0.055 : 0.035, 16, 16]} /><meshBasicMaterial color="#76ff76" transparent opacity={0.16} depthWrite={false} /></mesh>
-    {selected && !active && <Html position={[0, place.id === origin ? -0.12 : 0.18, 0]} center occlude zIndexRange={[9, 0]} style={{ pointerEvents: 'none' }}><div className="selected-place-label"><span>{place.id === origin ? 'ORIGIN' : 'CONTINUATION'}</span><strong>{place.name}</strong></div></Html>}
-    {active && <Html center position={[0, 0.28, 0]} occlude zIndexRange={[30, 20]} style={{ pointerEvents: 'none' }}><div className="globe-tooltip is-visible"><small>LOCATION / {place.country}</small><strong>{place.name}</strong><span>{Math.abs(place.lat).toFixed(4)}° {place.lat >= 0 ? 'N' : 'S'} · {Math.abs(place.lng).toFixed(4)}° {place.lng >= 0 ? 'E' : 'W'}</span></div></Html>}
+    <mesh ref={dot} renderOrder={mapView === 'flat' ? 7 : 0} raycast={() => {}}>{mapView === 'flat' ? <circleGeometry args={[active ? 0.035 : selected ? 0.03 : 0.018, 24]} /> : <sphereGeometry args={[active ? 0.03 : selected ? 0.025 : 0.016, 16, 16]} />}<meshBasicMaterial color={COORDINATE_COLOR} transparent depthWrite={false} depthTest={mapView !== 'flat'} toneMapped={false} /></mesh>
+    <mesh ref={halo} renderOrder={mapView === 'flat' ? 6 : 0} raycast={() => {}}>{mapView === 'flat' ? <ringGeometry args={[0.04, selected || active ? 0.055 : 0.045, 24]} /> : <sphereGeometry args={[selected || active ? 0.055 : 0.035, 16, 16]} />}<meshBasicMaterial color={COORDINATE_COLOR} depthTest={mapView !== 'flat'} transparent opacity={0.16} depthWrite={false} /></mesh>
+    {selected && !active && <Html position={[0, mapView === 'flat' ? 0 : place.id === origin ? -0.12 : 0.18, 0]} center occlude={mapView !== 'flat'} zIndexRange={[9, 0]} style={{ pointerEvents: 'none' }}><div className="selected-place-label" style={mapView === 'flat' ? { transform: `translateY(${place.id === origin ? 25 : -25}px)` } : undefined}><span>{place.id === origin ? 'ORIGIN' : 'CONTINUATION'}</span><strong>{place.name}</strong></div></Html>}
+    {active && <Html center position={[0, 0.28, 0]} occlude={mapView !== 'flat'} zIndexRange={[30, 20]} style={{ pointerEvents: 'none' }}><div className="globe-tooltip is-visible" style={mapView === 'flat' ? {transform:'translateY(-35px)'} : undefined}><small>LOCATION / {place.country}</small><strong>{place.name}</strong><span>{Math.abs(place.lat).toFixed(4)}° {place.lat >= 0 ? 'N' : 'S'} · {Math.abs(place.lng).toFixed(4)}° {place.lng >= 0 ? 'E' : 'W'}</span></div></Html>}
     </group>
   </group>
 }
 
 export function CosmicWorld() {
   const mapView = useJourney(s => s.mapView)
+  const journeyStep = useJourney(s => s.journeyStep)
   const emblemSeed = useJourney((s) => s.emblemSeed)
   const origin = useJourney((s) => s.origin)
   const destination = useJourney((s) => s.destination)
@@ -92,11 +103,9 @@ export function CosmicWorld() {
   return <>
     {!revealed ? <group ref={globe} quaternion={mapView === 'flat' ? new Quaternion() : fromRotation.current}>
       <Earth />
-      <TechFlightNetwork />
-      {personal.map((points, i) => <AnimatedRoute key={`${origin}-${destination}-${mapView}-${i}`} points={points} />)}
+      {journeyStep === 'connected' && personal.map((points, i) => <AnimatedRoute key={`${origin}-${destination}-${mapView}-${i}`} points={points} />)}
       {places.map((p) => <PlaceMarker key={p.id} place={p} selected={origin === p.id || destination === p.id} />)}
     </group> : null}
-    {(stage==='reveal' || stage==='garment') && <AssemblingEmblem key={seed} seed={seed} />}
-    {(stage==='garment' || stage==='world') && <GarmentWorldScene seed={seed} />}
+    {stage==='reveal' && <AssemblingEmblem key={seed} seed={seed} />}
   </>
 }

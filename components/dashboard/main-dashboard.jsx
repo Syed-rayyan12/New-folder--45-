@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { cloneElement, useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ChevronDown, Search, X } from 'lucide-react'
 import styles from './main-dashboard.module.css'
 
@@ -25,9 +26,10 @@ const SIGNALS = [
 ]
 const NAV = ['Overview', 'Corridors', 'Audience', 'Campaign', 'Collection', 'Journal', 'Settings']
 
-export function MainDashboard() {
+export function MainDashboard({ children, activePage = 'Overview' }) {
+  const router = useRouter()
   const [query, setQuery] = useState('')
-  const [active, setActive] = useState('Overview')
+  const [active, setActive] = useState(activePage)
   const [selected, setSelected] = useState('lahore-birmingham')
   const [menu, setMenu] = useState(false)
   const [drawer, setDrawer] = useState(null)
@@ -38,13 +40,11 @@ export function MainDashboard() {
   const route = corridors.find(item => item.id === selected)
   const signals = SIGNALS.filter(([text]) => text.toLowerCase().includes(search))
   const navigate = (name) => {
-    setActive(name)
-    if (name === 'Overview') { setDrawer(null); setCountry(null); setQuery('') }
-    else if (name === 'Corridors') { setDrawer(null); document.getElementById('top-corridors')?.focus() }
-    else if (name === 'Audience') { setDrawer(null); document.getElementById('origin-ranking')?.focus() }
-    else if (name === 'Journal') { setDrawer(null); document.getElementById('recent-signal')?.focus() }
-    else setDrawer(name)
+    const routes = { Overview:'/main-dashboard', Corridors:'/main-dashboard/corridors', Audience:'/main-dashboard/audience', Campaign:'/main-dashboard/campaign', Collection:'/main-dashboard/collection', Journal:'/main-dashboard/journal', Settings:'/main-dashboard/settings' }
+    if (routes[name]) { setActive(name); setDrawer(null); router.push(routes[name]); return }
+    setActive(name); setDrawer(name)
   }
+
   return <main className={styles.dashboard} aria-label="Main Dashboard">
     <header className={styles.header}>
       <a href="/" className={styles.brand} aria-label="PRVLG home">PRVLG</a>
@@ -52,12 +52,13 @@ export function MainDashboard() {
         <label className={styles.search}><Search size={14} aria-hidden="true" /><input aria-label="Search dashboard" placeholder="SEARCH" value={query} onChange={e => setQuery(e.target.value)} />{query && <button type="button" aria-label="Clear search" onClick={() => setQuery('')}><X size={13} /></button>}</label>
         <div className={styles.account}>
           <button type="button" aria-expanded={menu} onClick={() => setMenu(!menu)}>CURATOR <ChevronDown size={13} /></button>
-          {menu && <div className={styles.accountMenu}><strong>Main Dashboard</strong><span>Reference overview data</span><a href="/">Open the origin experience ↗</a><button type="button" onClick={() => { setDrawer('Settings'); setMenu(false) }}>Dashboard settings</button></div>}
+          {menu && <div className={styles.accountMenu}><strong>Main Dashboard</strong><span>Reference dashboard data</span><a href="/">Open the origin experience ↗</a><button type="button" onClick={() => { router.push('/main-dashboard/settings'); setMenu(false) }}>Dashboard settings</button></div>}
         </div>
       </div>
     </header>
     <aside className={styles.sidebar}><nav aria-label="Dashboard navigation">{NAV.map(name => <button type="button" key={name} className={active === name ? styles.active : ''} aria-current={active === name ? 'page' : undefined} onClick={() => navigate(name)}>{name}</button>)}</nav></aside>
-    <div className={styles.content}>
+    <div className={children ? styles.subpageContent : styles.content}>
+      {children ? cloneElement(children, { dashboardSearch: query }) : <>
       <section className={styles.metrics} aria-label="Overview metrics">
         <div className={styles.metric}><h2>WAITLIST</h2><i /><strong>4,182</strong><p><em>+26.1%</em><span className={styles.mono}> vs prior 4 wks</span></p></div>
         <div className={styles.metric}><h2>MARKS GENERATED</h2><strong>6,907</strong><p>All Time</p></div>
@@ -90,6 +91,7 @@ export function MainDashboard() {
         <h2>RECENT SIGNAL</h2><ul>{signals.map(([text, time], i) => <li key={i}><i /><span>{text}</span><time>{time}</time></li>)}</ul>
         {signals.length === 0 && <p className={styles.empty}>No matching signals.</p>}
       </section>
+      </>}
     </div>
     {drawer && <div className={styles.drawerBackdrop} onClick={() => setDrawer(null)}><section className={styles.drawer} role="dialog" aria-modal="true" aria-label={drawer} onClick={e => e.stopPropagation()}><div><h2>{drawer.toUpperCase()}</h2><button type="button" aria-label="Close panel" onClick={() => setDrawer(null)}><X size={18} /></button></div>{drawer === 'Settings' ? <><h3>Main Dashboard</h3><p>Curator overview · Global view</p><p>This dashboard displays the reference figures. Live reporting is not connected.</p><a href="/">Return to the origin experience ↗</a></> : drawer === 'Campaign' ? <><h3>Origin is everything.</h3><p>Recent campaign signal</p><p>Journey started — via Instagram</p><span>14 Min</span></> : <><h3>Your personal constellation.</h3><p>6,907 marks generated across 74 active corridors.</p><a href="/">Explore the collection experience ↗</a></>}</section></div>}
   </main>
