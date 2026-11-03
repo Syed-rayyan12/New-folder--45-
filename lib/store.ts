@@ -3,6 +3,7 @@ import type { LocationId } from './locations'
 import { wrapGarment, type WorldSection } from './garment-world'
 import { hashString } from './mark'
 import { GALAXY_BACKGROUNDS } from './galaxy-backgrounds'
+import type { MapView } from './geo'
 
 export type Stage = 'intro' | 'network' | 'q1' | 'q2' | 'reveal' | 'garment' | 'world'
 export type Lighting = 'day' | 'night'
@@ -20,6 +21,10 @@ export const STAGE_LABELS: Record<Stage, string> = {
 }
 
 type JourneyState = {
+  mapView: MapView
+  setMapView: (view: MapView) => void
+  zoomCommand: { action: 'in' | 'out' | 'reset'; sequence: number }
+  zoomMap: (action: 'in' | 'out' | 'reset') => void
   editorOpen: boolean
   ready: boolean
   stage: Stage
@@ -50,6 +55,10 @@ type JourneyState = {
 }
 
 export const useJourney = create<JourneyState>((set, get) => ({
+  mapView: 'globe',
+  setMapView: (mapView) => set({ mapView, hovered: null }),
+  zoomCommand: { action: 'reset', sequence: 0 },
+  zoomMap: (action) => set(s => ({ zoomCommand: { action, sequence: s.zoomCommand.sequence + 1 } })),
   editorOpen: false,
   ready: false,
   stage: 'intro',

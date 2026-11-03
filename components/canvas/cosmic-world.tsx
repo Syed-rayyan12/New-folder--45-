@@ -4,7 +4,7 @@ import { Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import { Group, Quaternion } from 'three'
-import { arcPoints, latLngToVector3 } from '@/lib/geo'
+import { mapPosition, routeSegments } from '@/lib/geo'
 import { getLocation, LOCATIONS, type Location } from '@/lib/locations'
 import { useJourney } from '@/lib/store'
 import { journeyOrientation } from '@/lib/globe-focus'
@@ -21,7 +21,8 @@ function PlaceMarker({ place, selected }: { place: Location; selected: boolean }
   const stage = useJourney((s) => s.stage)
   const setHovered = useJourney((s) => s.setHovered)
   const active = hovered === place.id
-  const position = latLngToVector3(place.lat, place.lng, 2.025)
+  const mapView = useJourney(s => s.mapView)
+  const position = mapPosition(place.lat, place.lng, 2.025, mapView)
   return <group>
     <TechPlaceEffect place={place} selected={selected || active} />
     <group position={position}>
@@ -43,6 +44,7 @@ function PlaceMarker({ place, selected }: { place: Location; selected: boolean }
 }
 
 export function CosmicWorld() {
+  const mapView = useJourney(s => s.mapView)
   const emblemSeed = useJourney((s) => s.emblemSeed)
   const origin = useJourney((s) => s.origin)
   const destination = useJourney((s) => s.destination)
@@ -56,7 +58,9 @@ export function CosmicWorld() {
   const transition = useRef(1)
   const previousSelection = useRef({ origin, destination })
   useEffect(() => {
-    if (!globe.current || (!origin && !destination)) return
+    if (!globe.current) return
+    if (mapView === 'flat') { globe.current.quaternion.identity(); transition.current = 1; return }
+    if (!origin && !destination) { globe.current.quaternion.copy(fromRotation.current); return }
     fromRotation.current.copy(globe.current.quaternion)
     const previous = previousSelection.current
     const focus = origin !== previous.origin && origin ? origin : destination !== previous.destination && destination ? destination : stage === 'q1' ? origin ?? destination : destination ?? origin
@@ -64,7 +68,7 @@ export function CosmicWorld() {
     targetRotation.current.copy(journeyOrientation(getLocation(focus!), null, camera.position))
     transition.current = reducedMotion ? 1 : 0
     if (reducedMotion) globe.current.quaternion.copy(targetRotation.current)
-  }, [origin, destination, stage, camera, reducedMotion])
+  }, [origin, destination, stage, camera, reducedMotion, mapView])
   useEffect(() => {
     const stop = () => { transition.current = 1 }
     gl.domElement.addEventListener('pointerdown', stop)
@@ -82,14 +86,14 @@ export function CosmicWorld() {
     for (const id of [origin, destination]) if (id) all.set(id, getLocation(id))
     return [...all.values()]
   }, [origin, destination])
-  const personal = useMemo(() => origin && destination ? arcPoints(latLngToVector3(getLocation(origin).lat, getLocation(origin).lng, 2.025), latLngToVector3(getLocation(destination).lat, getLocation(destination).lng, 2.025), 180, 0.16) : null, [origin, destination])
+  const personal = useMemo(() => origin && destination ? routeSegments(getLocation(origin), getLocation(destination), mapView) : [], [origin, destination, mapView])
   const revealed = stage === 'reveal' || stage === 'garment' || stage === 'world'
   const seed = emblemSeed
   return <>
-    {!revealed ? <group ref={globe} quaternion={fromRotation.current}>
+    {!revealed ? <group ref={globe} quaternion={mapView === 'flat' ? new Quaternion() : fromRotation.current}>
       <Earth />
       <TechFlightNetwork />
-      {personal && <AnimatedRoute key={`${origin}-${destination}`} points={personal} />}
+      {personal.map((points, i) => <AnimatedRoute key={`${origin}-${destination}-${mapView}-${i}`} points={points} />)}
       {places.map((p) => <PlaceMarker key={p.id} place={p} selected={origin === p.id || destination === p.id} />)}
     </group> : null}
     {(stage==='reveal' || stage==='garment') && <AssemblingEmblem key={seed} seed={seed} />}

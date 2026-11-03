@@ -2,10 +2,23 @@
 
 import { useFrame, useLoader } from '@react-three/fiber'
 import { memo, useEffect, useMemo, useRef } from 'react'
-import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, Group } from 'three'
+import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, Group, PlaneGeometry } from 'three'
 import { useJourney } from '@/lib/store'
 import { techEarthVertex, techEarthFragment, atmosphereVertex, atmosphereFragment } from '@/lib/ghostcat-earth-shaders'
 import { LocalTextureLoader } from '@/lib/local-texture-loader'
+import { flatPosition } from '@/lib/geo'
+
+// Match the globe's opaque texture and green hue on the curved map silhouette.
+const flatFragment = `
+  uniform sampler2D map;
+  uniform vec3 glowColor;
+  varying vec2 vUv;
+  void main() {
+    vec3 source = texture2D(map, vUv).rgb;
+    float detail = max(source.r, max(source.g, source.b));
+    gl_FragColor = vec4(glowColor * detail, 1.0);
+  }
+`
 
 function OrbitalRing({ radius, tilt, color, offset }: { radius: number; tilt: number; color: string; offset: number }) {
   const orbit = useRef<Group>(null)
@@ -21,6 +34,7 @@ function OrbitalRing({ radius, tilt, color, offset }: { radius: number; tilt: nu
 
 /** Port of the source globe's texture, scanning shader, atmosphere and satellite rings. */
 export const Earth = memo(function Earth() {
+  const mapView = useJourney(s => s.mapView)
   const isMobile = useJourney(s => s.isMobile)
   const reduced = useJourney(s => s.reducedMotion)
   const [map, glow] = useLoader(LocalTextureLoader,[`/vendor/ghostcat-earth/earth-${isMobile?2048:4096}.jpg`,'/vendor/ghostcat-earth/glow.png'])
@@ -28,6 +42,18 @@ export const Earth = memo(function Earth() {
     map:{value:map},glowColor:{value:new Color('#76ff76')},scale:{value:-1},bias:{value:1},power:{value:3.3},time:{value:100},
   }),[map])
   const elapsed = useRef(0)
+  const flatGeometry = useMemo(() => {
+    const surface = new PlaneGeometry(1, 1, 240, 120)
+    const positions = surface.getAttribute('position')
+    const uv = surface.getAttribute('uv')
+    for (let i = 0; i < positions.count; i++) {
+      const p = flatPosition(uv.getY(i) * 180 - 90, uv.getX(i) * 360 - 180)
+      positions.setXYZ(i, p.x, p.y, 0)
+    }
+    surface.computeBoundingSphere()
+    return surface
+  }, [])
+  useEffect(() => () => flatGeometry.dispose(), [flatGeometry])
   const geometry=useMemo(()=>{
     const count=isMobile?700:1600,positions=new Float32Array(count*3),golden=Math.PI*(3-Math.sqrt(5))
     for(let i=0;i<count;i++){
@@ -38,6 +64,9 @@ export const Earth = memo(function Earth() {
   },[isMobile])
   useEffect(()=>()=>geometry.dispose(),[geometry])
   useFrame((_,delta)=>{if(!reduced){elapsed.current+=Math.min(delta,.05);uniforms.time.value=100-(elapsed.current*20)%200}})
+  if (mapView === 'flat') return <mesh geometry={flatGeometry} raycast={() => {}}>
+    <shaderMaterial uniforms={uniforms} vertexShader={techEarthVertex} fragmentShader={flatFragment} toneMapped={false} />
+  </mesh>
   return <group>
     <mesh onPointerOver={e=>e.stopPropagation()} onPointerMove={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()}>
       <sphereGeometry args={[2,isMobile?48:64,isMobile?40:64]}/>

@@ -56,6 +56,9 @@ export function Experience() {
   const { stage, origin, destination, ready, setReady, setStage, restart } = useJourney()
   const emblemReady = useJourney(s => s.emblemReady)
   const reducedMotion = useJourney(s => s.reducedMotion)
+  const mapView = useJourney(s => s.mapView)
+  const setMapView = useJourney(s => s.setMapView)
+  const zoomMap = useJourney(s => s.zoomMap)
   useEffect(() => { useJourney.getState().setLighting('night') }, [])
   const inWorld = stage === 'world'
   const transferring = stage === 'garment'
@@ -83,6 +86,18 @@ export function Experience() {
     {!inWorld && !transferring && <GalaxyPicker />}
     {!inWorld && !transferring && <>
     <div className="scene-heading"><Statements /></div>
+    {!revealed && webgl && <div className="map-toolbar" aria-label="Map controls">
+      <div role="group" aria-label="Map view">
+        <button type="button" aria-pressed={mapView === 'globe'} onClick={() => setMapView('globe')}>3D Globe</button>
+        <button type="button" aria-pressed={mapView === 'flat'} onClick={() => setMapView('flat')}>2D World Map</button>
+      </div>
+      <div role="group" aria-label="Zoom controls">
+        <button type="button" aria-label="Zoom in" onClick={() => zoomMap('in')}>+</button>
+        <button type="button" aria-label="Zoom out" onClick={() => zoomMap('out')}>−</button>
+        <button type="button" onClick={() => zoomMap('reset')}>Reset view</button>
+      </div>
+      <small>{mapView === 'flat' ? 'Drag to tilt · Right-drag / two fingers to pan · Scroll / pinch to zoom' : 'Drag to rotate · Scroll / pinch to zoom'}</small>
+    </div>}
     <div className="globe-caption"><Globe2 size={15} /><span>DRAG TO EXPLORE 360°</span><span className="caption-line" /><span>SCROLL TO ZOOM</span></div>
     <aside className="journey-panel">
       <div className="panel-top"><span className="eyebrow">A WORLD WITHIN YOU</span><Sparkles size={18} /></div>
