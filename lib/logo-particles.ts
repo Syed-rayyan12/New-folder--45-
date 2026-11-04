@@ -19,7 +19,13 @@ export const LOGO_STEPS = [0.045, 0.22, 0.48, 1] as const
 export const LOGO_STAGE_ENDS = [1.3, 2.6, 4.0, 5.8] as const
 export const LOGO_FORMATION_DURATION = LOGO_STAGE_ENDS[3]
 export const LOGO_PARTICLE_TRAVEL = 1.15
-export const LOGO_COMPLETE_AT = 6.15
+export const LOGO_COMPLETE_AT = 6.65
+
+/** Resolve the final stippled stage into the complete, readable brand silhouette. */
+export function logoResolve(seconds:number) {
+  const t=Math.max(0,Math.min(1,(seconds-4.9)/1.15))
+  return t*t*t*(t*(t*6-15)+10)
+}
 
 /** The sparse silhouette must finish before the denser reference stages form. */
 export function logoParticleArrival(rank: number) {

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { BufferAttribute, BufferGeometry, CanvasTexture, NormalBlending, OrthographicCamera, Points, Scene, ShaderMaterial, WebGLRenderer } from 'three'
 import { BRAND_LOGO_PATHS } from '@/lib/brand-logo'
-import { LOGO_COMPLETE_AT, LOGO_PARTICLE_TRAVEL, LOGO_STAGE_ENDS, logoDensity, logoParticles, logoParticleArrival } from '@/lib/logo-particles'
+import { LOGO_COMPLETE_AT, LOGO_PARTICLE_TRAVEL, LOGO_STAGE_ENDS, logoDensity, logoParticles, logoParticleArrival, logoResolve } from '@/lib/logo-particles'
 
 const vertexShader = `
   attribute vec2 aOffset;
@@ -31,6 +31,7 @@ const vertexShader = `
 `
 const fragmentShader = `
   uniform sampler2D uMask;
+  uniform float uResolve;
   varying float vAlpha;
   varying float vProgress;
   varying vec2 vMaskUv;
@@ -38,19 +39,21 @@ const fragmentShader = `
     float distance = length(gl_PointCoord-0.5);
     float circle = 1.0-smoothstep(0.3, 0.5, distance);
     float silhouette = mix(1.0, texture2D(uMask, vMaskUv).a, smoothstep(0.8, 1.0, vProgress));
-    gl_FragColor = vec4(1.0, 1.0, 1.0, circle*vAlpha*silhouette);
+    gl_FragColor = vec4(1.0, 1.0, 1.0, circle*vAlpha*silhouette*(1.0-uResolve));
   }
 `
 
 /** One GPU draw call animates every star, without thousands of Canvas2D draws. */
 export function ParticleLogo({ reduced, onDrawn }: { reduced: boolean; onDrawn: () => void }) {
   const host = useRef<HTMLDivElement>(null)
+  const resolved = useRef<SVGSVGElement>(null)
   const complete = useRef(onDrawn)
   complete.current = onDrawn
   const [fallback, setFallback] = useState(false)
   useEffect(() => {
     const container = host.current
     if (!container) return
+    if(reduced){setFallback(true);complete.current();return}
     let renderer: WebGLRenderer
     try { renderer = new WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' }) }
     catch { setFallback(true); const timer = window.setTimeout(() => complete.current(), reduced ? 0 : LOGO_COMPLETE_AT * 1000); return () => window.clearTimeout(timer) }
@@ -81,7 +84,7 @@ export function ParticleLogo({ reduced, onDrawn }: { reduced: boolean; onDrawn: 
     const texture = new CanvasTexture(mask)
     const material = new ShaderMaterial({
       vertexShader, fragmentShader, transparent: true, depthTest: false, depthWrite: false,
-      blending: NormalBlending, uniforms: { uTime: { value: 0 }, uScale: { value: 3 }, uMask: { value: texture }, uTravel: { value: LOGO_PARTICLE_TRAVEL }, uDensity: { value: 0 } },
+      blending: NormalBlending, toneMapped:false, uniforms: { uTime: { value: 0 }, uScale: { value: 3 }, uMask: { value: texture }, uTravel: { value: LOGO_PARTICLE_TRAVEL }, uDensity: { value: 0 }, uResolve:{value:0} },
     })
     const scene = new Scene()
     const points = new Points(geometry, material)
@@ -102,6 +105,9 @@ export function ParticleLogo({ reduced, onDrawn }: { reduced: boolean; onDrawn: 
       const seconds = reduced ? LOGO_COMPLETE_AT : (now-start)/1000
       material.uniforms.uTime.value = seconds
       material.uniforms.uDensity.value = logoDensity(seconds)
+      const resolve=logoResolve(seconds)
+      material.uniforms.uResolve.value=resolve
+      if(resolved.current)resolved.current.style.opacity=String(resolve)
       const phase = LOGO_STAGE_ENDS.findIndex(end => seconds < end)
       container.dataset.step = String(phase === -1 ? 4 : phase + 1)
       renderer.render(scene, camera)
@@ -118,7 +124,7 @@ export function ParticleLogo({ reduced, onDrawn }: { reduced: boolean; onDrawn: 
       geometry.dispose(); material.dispose(); texture.dispose(); renderer.dispose()
     }
   }, [reduced])
-  return <div ref={host} className="brand-particle-canvas brand-particle-stage" role="img" aria-label="PRVLG HERITAGE — particles smoothly forming the logo">
-    {fallback && <svg viewBox="0 0 330 194" className="brand-particle-fallback" aria-hidden="true">{BRAND_LOGO_PATHS.map((d, i) => <path key={i} d={d} fill="white" fillRule="evenodd" />)}</svg>}
+  return <div ref={host} className="brand-particle-canvas brand-particle-stage" role="img" aria-label="PRVLG HERITAGE — particles smoothly forming the complete logo">
+    <svg ref={resolved} viewBox="0 0 330 194" className={`brand-logo-resolved${fallback?' is-fallback':''}`} style={{opacity:fallback?1:0}} aria-hidden="true">{BRAND_LOGO_PATHS.map((d, i) => <path key={i} d={d} fill="white" fillRule="evenodd" />)}</svg>
   </div>
 }
