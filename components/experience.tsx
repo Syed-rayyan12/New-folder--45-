@@ -6,6 +6,7 @@ import { Globe2, Map } from 'lucide-react'
 import { useJourney } from '@/lib/store'
 import { useEnvironment } from '@/lib/use-environment'
 import { BrandIntro } from './ui-layer/brand-intro'
+import { FlatWorldMap } from './ui-layer/flat-world-map'
 import { GuidedJourney } from './ui-layer/guided-journey'
 import { GarmentWorld } from './ui-layer/garment-world'
 import { GalaxyPicker } from './ui-layer/galaxy-picker'
@@ -37,7 +38,7 @@ export function Experience() {
     <BrandIntro ready={ready} onComplete={() => setIntroComplete(true)} />
     <div className={`experience-content${introComplete ? ' is-entered' : ''}${inWorld || transferring ? ' is-garment-world' : ''}`} inert={!introComplete} aria-hidden={!introComplete}>
       {webgl !== null && <GalaxyBackdrop />}
-      <div className="cosmic-canvas">{webgl && <SceneCanvas />}</div>
+      <div className="cosmic-canvas">{!revealed && mapView==='flat' ? <FlatWorldMap /> : webgl && <SceneCanvas />}</div>
       <div className="space-vignette" />
       {!revealed && <>
         <GalaxyPicker />

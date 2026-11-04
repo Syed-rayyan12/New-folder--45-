@@ -25,7 +25,7 @@ function DrawStroke({ stroke, elapsed }: { stroke: SacredStroke; elapsed: React.
   return <group><mesh geometry={geometry}><meshBasicMaterial color="#ffffff" toneMapped={false} /></mesh><mesh ref={tip} visible={false}><sphereGeometry args={[stroke.thickness*1.7,8,8]} /><meshBasicMaterial color="#ffffff" toneMapped={false} /></mesh></group>
 }
 
-export function EmblemStamp({ seed }: { seed: number }) {
+export function EmblemStamp({ seed, color = '#ffffff' }: { seed: number; color?: string }) {
   const geometry=useMemo(() => {
     const pieces=buildSacredEmblem(seed).strokes.map(stroke => {
       const tube=new TubeGeometry(new CatmullRomCurve3(stroke.points,false,'centripetal'),stroke.points.length>2?96:1,stroke.thickness,6,false)
@@ -36,7 +36,7 @@ export function EmblemStamp({ seed }: { seed: number }) {
     return merged
   },[seed])
   useEffect(()=>()=>geometry.dispose(),[geometry])
-  return <mesh geometry={geometry}><meshBasicMaterial color="#ffffff" toneMapped={false} /></mesh>
+  return <mesh geometry={geometry}><meshBasicMaterial color={color} toneMapped={false} /></mesh>
 }
 
 export function AssemblingEmblem({ seed }: { seed: number }) {

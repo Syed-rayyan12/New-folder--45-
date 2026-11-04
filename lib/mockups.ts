@@ -9,8 +9,9 @@ export type MockupAsset = {
 }
 
 export const DEFAULT_MOCKUPS: MockupAsset[] = [
-  { id:'original-tank', name:'Your Tank', src:'/images/tank.png', width:750, height:333, bounds:[289,66,171,221], tintGain:2 },
-  { id:'studio-tank-front', name:'Studio Tank', src:'/mockups/studio-tank-front.png', tintGain:1.35 },
+  { id:'original-tshirt', name:'Your T-Shirt', src:'/images/Green%20Crew-Neck%20T-Shirt%20Mockup.png', tintGain:2 },
+  { id:'original-hoodie', name:'Your Hoodie', src:'/images/hoodie.png', tintGain:2 },
+  { id:'original-long-sleeve', name:'Long Sleeve', src:'/images/Bright%20Green%20Long-Sleeve%20Crewneck%20Shirt.png', tintGain:2 },
 ]
 
 export const GARMENT_COLORS = [

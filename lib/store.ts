@@ -63,7 +63,7 @@ type JourneyState = {
 }
 
 export const useJourney = create<JourneyState>((set, get) => ({
-  mockupId: 'original-tank',
+  mockupId: 'original-tshirt',
   mockupColor: 'original',
   setMockup: (mockupId) => set({mockupId}),
   setMockupColor: (mockupColor) => set({mockupColor}),

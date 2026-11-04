@@ -4,7 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { buildSacredEmblem } from '@/lib/sacred-emblem'
 import type { MockupAsset } from '@/lib/mockups'
 
-export function MockupGraphic({asset,color,seed,replay=0,onOpen,large=false}:{asset:MockupAsset;color:string;seed:number;replay?:number;onOpen?:()=>void;large?:boolean}) {
+export function MockupGraphic({asset,color,seed,replay=0,onOpen,large=false,reveal,showEmblem=true}:{asset:MockupAsset;color:string;seed:number;replay?:number;onOpen?:()=>void;large?:boolean;reveal?:number;showEmblem?:boolean}) {
   const host=useRef<HTMLDivElement>(null)
   const [space,setSpace]=useState({width:430,height:550})
   const [info,setInfo]=useState({width:asset.width||1000,height:asset.height||1200,bounds:asset.bounds,gain:asset.tintGain||1.5})
@@ -37,12 +37,12 @@ export function MockupGraphic({asset,color,seed,replay=0,onOpen,large=false}:{as
   const ratio=(w+12)/(h+12),drawWidth=Math.min(space.width,space.height*ratio)
   return <div ref={host} className={`mockup-graphic${large?' is-large':''}`}>
     {status==='loading'&&<span className="mockup-loading" role="status">Loading your mockup…</span>}
-    {status==='error'?<p className="mockup-loading" role="alert">This mockup could not load. Choose another image.</p>:<div key={`${asset.id}-${replay}`} className={`mockup-build${status==='ready'?' is-ready':''}`} style={{width:drawWidth,height:drawWidth/ratio,flex:'none'}}>
+    {status==='error'?<p className="mockup-loading" role="alert">This mockup could not load. Choose another image.</p>:<div key={`${asset.id}-${replay}`} className={`mockup-build${status==='ready'?' is-ready':''}`} style={{width:drawWidth,height:drawWidth/ratio,flex:'none',...(reveal===undefined?{}:{animation:'none',clipPath:`inset(0 0 ${100-reveal}% 0)`})}}>
       <svg viewBox={`${x-6} ${y-6} ${w+12} ${h+12}`} className="mockup-product-image" role="img" aria-label={`${asset.name} in ${color==='original'?'its original color':color}`} onClick={onOpen}>
         <defs><filter id={filter} colorInterpolationFilters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="linear" slope={rgb[0]*info.gain}/><feFuncG type="linear" slope={rgb[1]*info.gain}/><feFuncB type="linear" slope={rgb[2]*info.gain}/></feComponentTransfer></filter></defs>
         <image href={asset.src} width={info.width} height={info.height} filter={color==='original'?undefined:`url(#${filter})`}/>
       </svg>
-      <svg key={seed} className="mockup-live-emblem" viewBox={`${-radius-.06} ${-radius-.06} ${(radius+.06)*2} ${(radius+.06)*2}`} style={{color:dark?'#f3f0e8':'#19241b'}} role="img" aria-label={`Your unique ${emblem.name} emblem`}><g transform="scale(1,-1)">{emblem.strokes.map((stroke,i)=><polyline key={i} points={stroke.points.map(p=>`${p.x},${p.y}`).join(' ')} fill="none" stroke="currentColor" strokeWidth={stroke.thickness*1.7} strokeLinecap="round" strokeLinejoin="round"/>)}</g></svg>
+      {showEmblem&&<svg key={seed} className="mockup-live-emblem" viewBox={`${-radius-.06} ${-radius-.06} ${(radius+.06)*2} ${(radius+.06)*2}`} style={{color:dark?'#f3f0e8':'#19241b'}} role="img" aria-label={`Your unique ${emblem.name} emblem`}><g transform="scale(1,-1)">{emblem.strokes.map((stroke,i)=><polyline key={i} points={stroke.points.map(p=>`${p.x},${p.y}`).join(' ')} fill="none" stroke="currentColor" strokeWidth={stroke.thickness*1.7} strokeLinecap="round" strokeLinejoin="round"/>)}</g></svg>}
       <i className="mockup-build-line" aria-hidden="true"/>
     </div>}
   </div>
