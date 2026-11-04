@@ -21,10 +21,42 @@ export const LOGO_FORMATION_DURATION = LOGO_STAGE_ENDS[3]
 export const LOGO_PARTICLE_TRAVEL = 1.15
 export const LOGO_COMPLETE_AT = 6.65
 
-/** Resolve the final stippled stage into the complete, readable brand silhouette. */
-export function logoResolve(seconds:number) {
-  const t=Math.max(0,Math.min(1,(seconds-4.9)/1.15))
-  return t*t*t*(t*(t*6-15)+10)
+/** One continuous monotone curve: reference steps do not pause the movement. */
+function noiseCurve(seconds:number,values:readonly number[]) {
+  const times=[0,...LOGO_STAGE_ENDS]
+  if(seconds<=0)return values[0]
+  if(seconds>=LOGO_FORMATION_DURATION)return values[values.length-1]
+  let i=0
+  while(seconds>times[i+1])i++
+  const tangent=(k:number)=>{
+    if(k===0||k===values.length-1)return 0
+    const left=(values[k]-values[k-1])/(times[k]-times[k-1])
+    const right=(values[k+1]-values[k])/(times[k+1]-times[k])
+    return left*right<=0?0:2*left*right/(left+right)
+  }
+  const duration=times[i+1]-times[i],t=(seconds-times[i])/duration,t2=t*t,t3=t2*t
+  return (2*t3-3*t2+1)*values[i]+(t3-2*t2+t)*duration*tangent(i)
+    +(-2*t3+3*t2)*values[i+1]+(t3-t2)*duration*tangent(i+1)
+}
+
+/** Faint grain builds continuously into the same permanent black-and-white finish. */
+export function logoNoiseFrame(seconds:number) {
+  return {
+    threshold:noiseCurve(seconds,[0.76,0.64,0.55,0.48,0.41]),
+    opacity:noiseCurve(seconds,[0,0.18,0.38,0.62,1]),
+  }
+}
+
+/** Grain flows within the letters, then freezes on the fourth reference texture. */
+export function logoNoiseMotion(seconds:number) {
+  const t=Math.max(0,Math.min(1,seconds/LOGO_FORMATION_DURATION))
+  const remaining=(1-t)*(1-t)
+  return {
+    x:Math.sin(seconds*1.25)*2.4*remaining,
+    y:8*remaining,
+    sheenY:-80+t*350,
+    sheenOpacity:Math.sin(Math.PI*t)*0.3,
+  }
 }
 
 /** The sparse silhouette must finish before the denser reference stages form. */
