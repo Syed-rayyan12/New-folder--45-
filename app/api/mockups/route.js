@@ -5,6 +5,5 @@ export const dynamic = 'force-dynamic'
 
 /** The studio presents only the three selected original garment images. */
 export async function GET() {
-  const mockups=DEFAULT_MOCKUPS.map(asset=>({...asset,src:'/api/mockups/image?file='+encodeURIComponent(decodeURIComponent(asset.src.slice(1)))}))
-  return Response.json({mockups},{headers:{'Cache-Control':'no-store'}})
+  return Response.json({mockups:DEFAULT_MOCKUPS},{headers:{'Cache-Control':'no-store'}})
 }
