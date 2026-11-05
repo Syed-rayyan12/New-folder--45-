@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ClientProfile } from './client-profile'
+import type { ClientProfile,ClientLocationSource } from './client-profile'
 import type { LocationId } from './locations'
 import { wrapGarment, type WorldSection } from './garment-world'
 import { hashString } from './mark'
@@ -26,10 +26,11 @@ type JourneyState = {
   clientLocation: {lat:number;lng:number;accuracy:number}|null
   setClientLocation: (location:{lat:number;lng:number;accuracy:number})=>void
   clientProfile: ClientProfile|null
+  profileLocationSource:ClientLocationSource|null
   profileOpen:boolean
   requestEmblem:()=>void
   closeProfile:()=>void
-  saveClientProfile:(profile:ClientProfile)=>void
+  saveClientProfile:(profile:ClientProfile,locationSource?:ClientLocationSource)=>void
   mockupId: string
   mockupColor: string
   setMockup: (id: string) => void
@@ -74,10 +75,11 @@ export const useJourney = create<JourneyState>((set, get) => ({
   clientLocation:null,
   setClientLocation:(clientLocation)=>set({clientLocation}),
   clientProfile:null,
+  profileLocationSource:null,
   profileOpen:false,
   requestEmblem:()=>{const s=get();if(s.origin&&s.destination&&s.journeyStep==='connected')set({profileOpen:true})},
   closeProfile:()=>set({profileOpen:false}),
-  saveClientProfile:(clientProfile)=>{set({clientProfile,profileOpen:false});get().setStage('reveal')},
+  saveClientProfile:(clientProfile,profileLocationSource='manual')=>{set({clientProfile,profileLocationSource,profileOpen:false});get().setStage('reveal')},
   mockupId: 'original-tshirt',
   mockupColor: 'original',
   setMockup: (mockupId) => set({mockupId}),

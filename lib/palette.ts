@@ -1,8 +1,4 @@
-/**
- * The only two colours permitted anywhere in PRVLG.
- * Mirrored as CSS variables (--black, --signal) in app/globals.css.
- * Hierarchy comes from opacity and line weight, never from new colours.
- */
+/** Shared scene colors. */
 export const BLACK = '#000000' as const
 export const SIGNAL = '#76FF76' as const
 export const GLOBE_COLOR = '#67F163' as const
@@ -14,3 +10,7 @@ export const OPACITY = {
   mid: 0.6,
   full: 1,
 } as const
+
+export const CONNECTION_COLOR = '#438F44' as const
+export const POINT_COLOR = '#67F163' as const
+export const MAP_OUTLINE_COLOR = '#2C312E' as const

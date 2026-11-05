@@ -8,3 +8,9 @@ export const clientProfileSchema=z.object({
   location:z.string().trim().min(2,'Enter your location.').max(180),
 })
 export type ClientProfile=z.infer<typeof clientProfileSchema>
+export type ClientLocationSource='geolocation'|'manual'
+
+/** Wishlist location belongs to the visitor, never to the connected places. */
+export function wishlistLocationValue(coordinates:{lat:number;lng:number}|null,savedManualLocation=''){
+  return coordinates?`${coordinates.lat.toFixed(5)}, ${coordinates.lng.toFixed(5)}`:savedManualLocation
+}

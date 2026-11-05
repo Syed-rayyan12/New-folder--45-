@@ -4,7 +4,7 @@ import { Line } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, type ComponentRef } from 'react'
 import { CatmullRomCurve3, Mesh, OrthographicCamera, type Vector3 } from 'three'
-import { GLOBE_COLOR, COORDINATE_COLOR } from '@/lib/palette'
+import { CONNECTION_COLOR, POINT_COLOR } from '@/lib/palette'
 import { useJourney } from '@/lib/store'
 
 /** Draw the selected route once, from origin to destination, then leave it still. */
@@ -24,5 +24,5 @@ export function AnimatedRoute({ points }: { points: Vector3[] }) {
       tip.current.scale.setScalar(flat && state.camera instanceof OrthographicCamera ? 3.5 / (state.camera.zoom * 0.026) : 1)
     }
   })
-  return <group><Line ref={line} points={points} color={GLOBE_COLOR} lineWidth={flat ? 2.5 : 1.8} transparent depthTest={!flat} depthWrite={false} renderOrder={flat ? 5 : 0} toneMapped={false} raycast={() => {}} /><mesh ref={tip} renderOrder={flat ? 6 : 0}>{flat ? <circleGeometry args={[0.026, 24]} /> : <sphereGeometry args={[0.026, 12, 12]} />}<meshBasicMaterial color={COORDINATE_COLOR} transparent depthWrite={false} depthTest={!flat} toneMapped={false} /></mesh></group>
+  return <group><Line ref={line} points={points} color={CONNECTION_COLOR} lineWidth={flat ? 2.5 : 1.8} transparent depthTest={!flat} depthWrite={false} renderOrder={flat ? 5 : 0} toneMapped={false} raycast={() => {}} /><mesh ref={tip} renderOrder={flat ? 6 : 0}>{flat ? <circleGeometry args={[0.026, 24]} /> : <sphereGeometry args={[0.026, 12, 12]} />}<meshBasicMaterial color={POINT_COLOR} transparent depthWrite={false} depthTest={!flat} toneMapped={false} /></mesh></group>
 }

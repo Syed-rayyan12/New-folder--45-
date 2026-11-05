@@ -5,7 +5,6 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react'
 import { getLocation, LOCATIONS, type LocationId } from '@/lib/locations'
 import { greatCircleKm } from '@/lib/geo'
-import { locationStatement } from '@/lib/statements'
 import { useJourney } from '@/lib/store'
 
 function JourneyPrompt({ canReveal, onHide }: { canReveal: boolean; onHide: () => void }) {
@@ -55,7 +54,8 @@ function JourneyPrompt({ canReveal, onHide }: { canReveal: boolean; onHide: () =
       {!first && <button type="button" className="journey-text-action" onClick={() => editJourney('origin')}><ArrowLeft size={12} /> Change your beginning</button>}
     </> : <>
       <h2 id="journey-question" ref={heading} tabIndex={-1} className="journey-statement-title">Your connected story.</h2>
-      <div className="journey-place-statements">{[from,to].filter((place):place is NonNullable<typeof from>=>Boolean(place)).map((place,index)=><article key={place.id}><h3>{index===0?'FROM':'NOW IN'} / {place.name}</h3><blockquote>{locationStatement(place)}</blockquote><p className="journey-coordinate-readout">{coordinate(place)}</p></article>)}</div>
+      <div className="journey-place-statements">{[from,to].filter((place):place is NonNullable<typeof from>=>Boolean(place)).map((place,index)=><article key={place.id}><h3>{index===0?'FROM':'NOW IN'} / {place.name}</h3><p className="journey-coordinate-readout">{coordinate(place)}</p></article>)}</div>
+      <p className="journey-map-hint">Hover over a coordinate point to read its story.</p>
       {connected && from && to && <p className="journey-distance">{Math.round(greatCircleKm(from,to)).toLocaleString()} KM CONNECTED</p>}
       <div className="journey-actions">
         <button type="button" className="journey-next" disabled={!canReveal} onClick={requestEmblem}>Reveal sacred emblem <ArrowUpRight size={16} /></button>

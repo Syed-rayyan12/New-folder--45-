@@ -6,7 +6,7 @@ import { AdditiveBlending, BufferAttribute, BufferGeometry, Color, Group, PlaneG
 import { useJourney } from '@/lib/store'
 import { techEarthVertex, techEarthFragment, atmosphereVertex, atmosphereFragment } from '@/lib/ghostcat-earth-shaders'
 import { LocalTextureLoader } from '@/lib/local-texture-loader'
-import { GLOBE_COLOR } from '@/lib/palette'
+import { GLOBE_COLOR, CONNECTION_COLOR, MAP_OUTLINE_COLOR } from '@/lib/palette'
 import { flatPosition } from '@/lib/geo'
 
 // Solid continents in the globe's palette, with genuinely transparent oceans.
@@ -30,7 +30,7 @@ function OrbitalRing({ radius, tilt, color, offset }: { radius: number; tilt: nu
   useFrame((_, delta) => { if (orbit.current && !reduced) orbit.current.rotation.y += Math.min(delta,.05)*.18 })
   return <group rotation={[0,0,tilt]}>
     <group ref={orbit} rotation={[0,offset,0]}>
-      <mesh rotation={[Math.PI/2,0,0]} raycast={() => {}}><torusGeometry args={[radius,.0025,4,160]}/><meshBasicMaterial color={GLOBE_COLOR} transparent opacity={.42} depthWrite={false}/></mesh>
+      <mesh rotation={[Math.PI/2,0,0]} raycast={() => {}}><torusGeometry args={[radius,.0025,4,160]}/><meshBasicMaterial color={CONNECTION_COLOR} transparent opacity={.42} depthWrite={false}/></mesh>
       {[0,Math.PI].map(a=><mesh key={a} position={[Math.cos(a)*radius,0,Math.sin(a)*radius]} raycast={() => {}}><sphereGeometry args={[.035,12,10]}/><meshBasicMaterial color={color} toneMapped={false}/></mesh>)}
     </group>
   </group>
@@ -43,7 +43,7 @@ export const Earth = memo(function Earth() {
   const reduced = useJourney(s => s.reducedMotion)
   const [map, glow, landMask] = useLoader(LocalTextureLoader,[`/vendor/ghostcat-earth/earth-${isMobile?2048:4096}.jpg`,'/vendor/ghostcat-earth/glow.png','/textures/earth-specular.jpg'])
   const uniforms = useMemo(()=>({
-    map:{value:map},landMask:{value:landMask},glowColor:{value:new Color(GLOBE_COLOR)},scale:{value:-1},bias:{value:1},power:{value:3.3},time:{value:100},
+    map:{value:map},landMask:{value:landMask},glowColor:{value:new Color(GLOBE_COLOR)},mapColor:{value:new Color(MAP_OUTLINE_COLOR)},scale:{value:-1},bias:{value:1},power:{value:3.3},time:{value:100},
   }),[map,landMask])
   const elapsed = useRef(0)
   const flatGeometry = useMemo(() => {

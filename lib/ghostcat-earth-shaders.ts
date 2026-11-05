@@ -9,7 +9,7 @@ export const techEarthVertex = `
   }
 `
 export const techEarthFragment = `
-  uniform vec3 glowColor;uniform float bias;uniform float power;uniform float time;
+  uniform vec3 glowColor;uniform vec3 mapColor;uniform float bias;uniform float power;uniform float time;
   uniform float scale;uniform sampler2D map;
   varying vec2 vUv;varying vec3 vp;varying vec3 vNormal;varying vec3 vPositionNormal;
   void main(){
@@ -23,8 +23,8 @@ export const techEarthFragment = `
     base=mix(base,vec4(glowColor,1.),rim);
     vec3 surface=texture2D(map,vUv).rgb;
     float detail=max(surface.r,max(surface.g,surface.b));
-    // Preserve the original map brightness and opaque surface; replace only its hue.
-    vec3 greenSurface=glowColor*detail;
+    // Country-map detail has its own color, separate from the atmosphere.
+    vec3 greenSurface=mapColor*detail;
     gl_FragColor=vec4(base.rgb+greenSurface,1.);
   }
 `
