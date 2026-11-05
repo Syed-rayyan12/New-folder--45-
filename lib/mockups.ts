@@ -5,12 +5,14 @@ export type MockupAsset = {
   width?: number
   height?: number
   bounds?: [number, number, number, number]
+  frontPrint?: {left:number;top:number;width:number}
+  backSrc?: string
   tintGain?: number
 }
 
 export const DEFAULT_MOCKUPS: MockupAsset[] = [
   { id:'original-tshirt', name:'Your T-Shirt', src:'/images/Green%20Crew-Neck%20T-Shirt%20Mockup.png', tintGain:2 },
-  { id:'original-hoodie', name:'Your Hoodie', src:'/images/hoodie.png', tintGain:2 },
+  { id:'original-hoodie', name:'Your Hoodie', src:'/images/hoodie.png', frontPrint:{left:50,top:52,width:12}, tintGain:2 },
   { id:'original-long-sleeve', name:'Long Sleeve', src:'/images/Bright%20Green%20Long-Sleeve%20Crewneck%20Shirt.png', tintGain:2 },
 ]
 

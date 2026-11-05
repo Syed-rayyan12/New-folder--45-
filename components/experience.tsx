@@ -10,6 +10,7 @@ import { getCompletedLogoCanvas } from './ui-layer/particle-logo'
 import type { GlobeBrandTarget } from './canvas/globe-brand'
 import { FlatWorldMap } from './ui-layer/flat-world-map'
 import ClientDialogs from './ui-layer/client-dialogs'
+import { MusicToggle } from './ui-layer/music-toggle'
 import { GuidedJourney } from './ui-layer/guided-journey'
 import { GarmentWorld } from './ui-layer/garment-world'
 import { GalaxyPicker } from './ui-layer/galaxy-picker'
@@ -49,6 +50,7 @@ export function Experience() {
     <div className="cosmic-canvas" inert={!introComplete}>{!revealed&&mapView==='flat'?<FlatWorldMap/>:webgl&&<SceneCanvas showBrand={!revealed} brandCanvas={brandCanvas} brandVisible={introComplete} onBrandTarget={introComplete?undefined:setBrandTarget}/>}</div>
     <div className="space-vignette"/>
     <ClientDialogs enabled={introComplete}/>
+    {introComplete&&<MusicToggle/>}
     <div className={`experience-content${introComplete ? ' is-entered' : ''}${inWorld || transferring ? ' is-garment-world' : ''}`} inert={!introComplete} aria-hidden={!introComplete}>
       {!revealed && <>
 
