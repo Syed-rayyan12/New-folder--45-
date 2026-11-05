@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { ClientCoordinates } from './client-location'
 import type { ClientProfile,ClientLocationSource } from './client-profile'
 import type { LocationId } from './locations'
 import { wrapGarment, type WorldSection } from './garment-world'
@@ -23,8 +24,8 @@ export const STAGE_LABELS: Record<Stage, string> = {
 }
 
 type JourneyState = {
-  clientLocation: {lat:number;lng:number;accuracy:number}|null
-  setClientLocation: (location:{lat:number;lng:number;accuracy:number})=>void
+  clientLocation: ClientCoordinates|null
+  setClientLocation: (location:ClientCoordinates)=>void
   clientProfile: ClientProfile|null
   profileLocationSource:ClientLocationSource|null
   profileOpen:boolean

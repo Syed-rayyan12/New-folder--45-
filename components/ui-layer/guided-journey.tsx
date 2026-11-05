@@ -48,7 +48,7 @@ function JourneyPrompt({ canReveal, onHide }: { canReveal: boolean; onHide: () =
         <div><label>Latitude<input name="lat" type="number" step="any" min="-90" max="90" placeholder="−90 to 90" required /></label><label>Longitude<input name="lng" type="number" step="any" min="-180" max="180" placeholder="−180 to 180" required /></label></div>
         <div className="journey-actions"><button type="submit" className="journey-next">Use this place <ArrowRight size={15} /></button><button type="button" className="journey-text-action" onClick={() => { setCustom(false); setError('') }}>Choose from the map</button></div>
       </form>}
-      {!first&&clientLocation&&<button type="button" className="journey-text-action" onClick={()=>choose(`custom:${clientLocation.lat}:${clientLocation.lng}:Current%20location`)}>Use my current location <ArrowUpRight size={12}/></button>}
+      {!first&&clientLocation&&<button type="button" className="journey-text-action" onClick={()=>choose(`custom:${clientLocation.lat}:${clientLocation.lng}:${encodeURIComponent(clientLocation.name||'Current location')}`)}>Use my current location <ArrowUpRight size={12}/></button>}
       <p className="journey-map-hint">You can also select a dot on the map.</p>
       {error && <p className="journey-error" role="alert">{error}</p>}
       {!first && <button type="button" className="journey-text-action" onClick={() => editJourney('origin')}><ArrowLeft size={12} /> Change your beginning</button>}

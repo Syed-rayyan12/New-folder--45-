@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
 import { useJourney } from '@/lib/store'
-import { getClientLocation } from '@/lib/client-location'
+import { getClientLocation, getClientLocationName } from '@/lib/client-location'
 import { clientProfileSchema,wishlistLocationValue, type ClientProfile } from '@/lib/client-profile'
 
 // Keep dialog icons local so the popup never depends on an optimized icon export.
@@ -31,7 +31,7 @@ export function ClientDialogs({enabled}:{enabled:boolean}){
   const requestLocation=async()=>{
     const request=++locationRequest.current
     setLocating(true);setLocationError('');setLocationStatus('Finding your location...')
-    try{const coordinates=await getClientLocation(navigator.geolocation,window.isSecureContext,()=>{if(request===locationRequest.current)setLocationStatus('Trying again...')});if(request!==locationRequest.current)return;setClientLocation(coordinates);setLocationAsked(true)}catch(error){if(request===locationRequest.current)setLocationError(error instanceof Error?error.message:'Location detection failed. Please try again.')}finally{if(request===locationRequest.current)setLocating(false)}
+    try{const coordinates=await getClientLocation(navigator.geolocation,window.isSecureContext,()=>{if(request===locationRequest.current)setLocationStatus('Trying again...')});if(request!==locationRequest.current)return;setClientLocation(coordinates);setLocationStatus('Finding your city...');const name=await getClientLocationName(coordinates);if(request!==locationRequest.current)return;setClientLocation({...coordinates,name});setLocationAsked(true)}catch(error){if(request===locationRequest.current)setLocationError(error instanceof Error?error.message:'Location detection failed. Please try again.')}finally{if(request===locationRequest.current)setLocating(false)}
   }
   const submit=(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault();const result=clientProfileSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)))
@@ -50,7 +50,7 @@ export function ClientDialogs({enabled}:{enabled:boolean}){
       <button type="button" className="client-primary" disabled={locating} onClick={requestLocation}><DialogIcon name="location" size={15}/><span>{locating?locationStatus:locationError?'Try location again':'Use my location'}</span></button>
       <button type="button" className="client-secondary" onClick={dismissLocation}>Enter manually</button>
       {locationError&&<p className="client-field-error" role="alert">{locationError}</p>}
-      <small>Your browser will ask for permission.</small>
+      <small>Your browser will ask for permission. BigDataCloud uses your coordinates to find your city.</small>
     </dialog>
     <dialog ref={profileDialog} className="client-dialog client-simple client-profile-dialog" aria-labelledby="client-profile-title" onCancel={closeProfile}>
       <button type="button" className="client-dialog-close" aria-label="Close wishlist details" onClick={closeProfile}><DialogIcon name="close"/></button>
