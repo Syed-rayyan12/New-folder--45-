@@ -13,3 +13,8 @@ export function mixedStatements(from: Location, to: Location): string[] {
     `Rooted in ${a}. Growing in ${b}.`, `${a} made me. ${b} moves me.`, `From ${a} to ${b}, still becoming.`, `Two places. One story: ${a} / ${b}.`, `My roots are in ${a}; my everyday is in ${b}.`, `A ${a} heart with a ${b} address.`, `Carrying ${a} through the streets of ${b}.`, `${a} behind my steps, ${b} before my eyes.`, `Where ${a} meets ${b}, I find myself.`, `My beginning: ${a}. My now: ${b}.`, `${a} in my memory. ${b} in my moment.`, `One signature, between ${a} and ${b}.`, `Born of one chapter in ${a}, writing another in ${b}.`, `The distance between ${a} and ${b} is part of me.`, `A little ${a}, a little ${b}, entirely me.`, `Home stretches from ${a} to ${b}.`, `The journey is ${a} to ${b}. The story is mine.`, `${a} gave me roots. ${b} gives me room.`, `I bring my ${a} story into my ${b} life.`, `Both ${a} and ${b} belong on my map.`,
   ]
 }
+
+/** One fixed statement per place, shared by all journey panels. */
+export function locationStatement(place:Location):string {
+  return place.statement || locationStatements(place)[0]
+}

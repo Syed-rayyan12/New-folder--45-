@@ -6,6 +6,7 @@ import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { Suspense, useEffect } from 'react'
 import { useJourney } from '@/lib/store'
 import { CosmicWorld } from './cosmic-world'
+import type { GlobeBrandTarget } from './globe-brand'
 import { JourneyControls } from './journey-controls'
 import { FLAT_HEIGHT, FLAT_WIDTH } from '@/lib/geo'
 import { useThree } from '@react-three/fiber'
@@ -22,7 +23,7 @@ function Ready() {
   return null
 }
 
-export default function SceneCanvas() {
+export default function SceneCanvas({showBrand=false,brandCanvas,brandVisible=true,onBrandTarget}:{showBrand?:boolean;brandCanvas?:HTMLCanvasElement|null;brandVisible?:boolean;onBrandTarget?:(target:GlobeBrandTarget)=>void}) {
   const reducedMotion = useJourney((s) => s.reducedMotion)
   const isMobile = useJourney((s) => s.isMobile)
   const stage = useJourney((s) => s.stage)
@@ -37,7 +38,7 @@ export default function SceneCanvas() {
       <directionalLight position={[4, 1, -3]} intensity={0.65} color="#d8e3df" />
       <Suspense fallback={null}>
         <Stars radius={65} depth={45} count={isMobile ? 200 : 500} factor={2} saturation={0} fade speed={reducedMotion ? 0 : 0.15} />
-        <CosmicWorld />
+        <CosmicWorld showBrand={showBrand} brandCanvas={brandCanvas} brandVisible={brandVisible} onBrandTarget={onBrandTarget}/>
         <Ready />
       </Suspense>
       <JourneyControls />

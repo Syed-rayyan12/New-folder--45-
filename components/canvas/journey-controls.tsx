@@ -44,6 +44,7 @@ export function JourneyControls() {
     if (!zoomCommand.sequence || !controls.current || showroom) return
     flight.current.progress = 1
     const control = controls.current
+    if(zoomCommand.action==='reset'){control.target.set(0,0,0);if(camera instanceof OrthographicCamera){camera.zoom=fitZoom;camera.position.set(0,0,20);camera.updateProjectionMatrix()}else camera.position.set(0,.7,8.7);control.update();return}
     if (camera instanceof OrthographicCamera) {
       camera.zoom = Math.max(fitZoom * 0.35, Math.min(fitZoom * 50, camera.zoom * (zoomCommand.action === 'in' ? 1.15 : 1 / 1.15)))
       camera.updateProjectionMatrix()
@@ -64,5 +65,5 @@ export function JourneyControls() {
     camera.position.lerpVectors(state.from, state.to, t*t*(3-2*t))
     controls.current?.update()
   })
-  return <OrbitControls ref={controls} makeDefault enablePan={flat && !showroom} screenSpacePanning enableRotate={!flat && !showroom} mouseButtons={flat ? { LEFT: MOUSE.PAN, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN } : { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} touches={flat ? { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_PAN } : { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }} enableZoom={!showroom} minZoom={fitZoom * 0.35} maxZoom={fitZoom * 50} minDistance={flat ? 0.3 : GLOBE_RADIUS + 0.15} maxDistance={flat ? 70 : 18} minAzimuthAngle={flat ? 0 : -Infinity} maxAzimuthAngle={flat ? 0 : Infinity} minPolarAngle={flat ? Math.PI / 2 : 0} maxPolarAngle={flat ? Math.PI / 2 : Math.PI} zoomSpeed={0.45} enableDamping dampingFactor={0.06} autoRotate={!flat && !reducedMotion && !origin && !destination && stage !== 'reveal' && !showroom} autoRotateSpeed={0.3} rotateSpeed={0.45} onStart={() => { flight.current.progress = 1 }} />
+  return <OrbitControls enabled={stage!=='intro'} ref={controls} makeDefault enablePan={flat && !showroom} screenSpacePanning enableRotate={!flat && !showroom} mouseButtons={flat ? { LEFT: MOUSE.PAN, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN } : { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} touches={flat ? { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_PAN } : { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }} enableZoom={!showroom} minZoom={fitZoom * 0.35} maxZoom={fitZoom * 50} minDistance={flat ? 0.3 : GLOBE_RADIUS + 0.15} maxDistance={flat ? 70 : 18} minAzimuthAngle={flat ? 0 : -Infinity} maxAzimuthAngle={flat ? 0 : Infinity} minPolarAngle={flat ? Math.PI / 2 : 0} maxPolarAngle={flat ? Math.PI / 2 : Math.PI} zoomSpeed={0.45} enableDamping dampingFactor={0.06} autoRotate={stage!=='intro' && !flat && !reducedMotion && !origin && !destination && stage !== 'reveal' && !showroom} autoRotateSpeed={0.3} rotateSpeed={0.45} onStart={() => { flight.current.progress = 1 }} />
 }

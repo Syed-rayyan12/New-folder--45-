@@ -10,6 +10,7 @@ import { useJourney } from '@/lib/store'
 import { COORDINATE_COLOR } from '@/lib/palette'
 import { journeyOrientation } from '@/lib/globe-focus'
 import { Earth } from './earth'
+import { GlobeBrand, type GlobeBrandTarget } from './globe-brand'
 import { AnimatedRoute } from './animated-route'
 import { AssemblingEmblem } from './assembling-emblem'
 
@@ -53,7 +54,7 @@ function PlaceMarker({ place, selected }: { place: Location; selected: boolean }
   </group>
 }
 
-export function CosmicWorld() {
+export function CosmicWorld({showBrand=false,brandCanvas,brandVisible=true,onBrandTarget}:{showBrand?:boolean;brandCanvas?:HTMLCanvasElement|null;brandVisible?:boolean;onBrandTarget?:(target:GlobeBrandTarget)=>void}) {
   const mapView = useJourney(s => s.mapView)
   const journeyStep = useJourney(s => s.journeyStep)
   const emblemSeed = useJourney((s) => s.emblemSeed)
@@ -103,6 +104,7 @@ export function CosmicWorld() {
   return <>
     {!revealed ? <group ref={globe} quaternion={mapView === 'flat' ? new Quaternion() : fromRotation.current}>
       <Earth />
+      {showBrand&&mapView==='globe'&&<GlobeBrand orientation={fromRotation.current} canvas={brandCanvas} visible={brandVisible} onTarget={onBrandTarget}/>}
       {journeyStep === 'connected' && personal.map((points, i) => <AnimatedRoute key={`${origin}-${destination}-${mapView}-${i}`} points={points} />)}
       {places.map((p) => <PlaceMarker key={p.id} place={p} selected={origin === p.id || destination === p.id} />)}
     </group> : null}

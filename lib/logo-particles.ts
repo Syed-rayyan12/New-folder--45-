@@ -19,7 +19,7 @@ export const LOGO_STEPS = [0.045, 0.22, 0.48, 1] as const
 export const LOGO_STAGE_ENDS = [1.3, 2.6, 4.0, 5.8] as const
 export const LOGO_FORMATION_DURATION = LOGO_STAGE_ENDS[3]
 export const LOGO_PARTICLE_TRAVEL = 1.15
-export const LOGO_COMPLETE_AT = 6.65
+export const LOGO_COMPLETE_AT = 6.15
 
 /** One continuous monotone curve: reference steps do not pause the movement. */
 function noiseCurve(seconds:number,values:readonly number[]) {

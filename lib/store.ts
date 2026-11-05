@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { ClientProfile } from './client-profile'
 import type { LocationId } from './locations'
 import { wrapGarment, type WorldSection } from './garment-world'
 import { hashString } from './mark'
@@ -22,6 +23,13 @@ export const STAGE_LABELS: Record<Stage, string> = {
 }
 
 type JourneyState = {
+  clientLocation: {lat:number;lng:number;accuracy:number}|null
+  setClientLocation: (location:{lat:number;lng:number;accuracy:number})=>void
+  clientProfile: ClientProfile|null
+  profileOpen:boolean
+  requestEmblem:()=>void
+  closeProfile:()=>void
+  saveClientProfile:(profile:ClientProfile)=>void
   mockupId: string
   mockupColor: string
   setMockup: (id: string) => void
@@ -30,8 +38,8 @@ type JourneyState = {
   editJourney: (kind: 'origin' | 'destination') => void
   mapView: MapView
   setMapView: (view: MapView) => void
-  zoomCommand: { action: 'in' | 'out'; sequence: number }
-  zoomMap: (action: 'in' | 'out') => void
+  zoomCommand: { action: 'in' | 'out' | 'reset'; sequence: number }
+  zoomMap: (action: 'in' | 'out' | 'reset') => void
   editorOpen: boolean
   ready: boolean
   stage: Stage
@@ -63,13 +71,20 @@ type JourneyState = {
 }
 
 export const useJourney = create<JourneyState>((set, get) => ({
+  clientLocation:null,
+  setClientLocation:(clientLocation)=>set({clientLocation}),
+  clientProfile:null,
+  profileOpen:false,
+  requestEmblem:()=>{const s=get();if(s.origin&&s.destination&&s.journeyStep==='connected')set({profileOpen:true})},
+  closeProfile:()=>set({profileOpen:false}),
+  saveClientProfile:(clientProfile)=>{set({clientProfile,profileOpen:false});get().setStage('reveal')},
   mockupId: 'original-tshirt',
   mockupColor: 'original',
   setMockup: (mockupId) => set({mockupId}),
   setMockupColor: (mockupColor) => set({mockupColor}),
   journeyStep: 'origin',
   editJourney: (kind) => set(s => ({ journeyStep: kind === 'destination' && s.origin ? 'destination' : 'origin', stage: kind === 'destination' && s.origin ? 'q2' : 'q1', hovered: null })),
-  mapView: 'flat',
+  mapView: 'globe',
   setMapView: (mapView) => set({ mapView, hovered: null }),
   zoomCommand: { action: 'in', sequence: 0 },
   zoomMap: (action) => set(s => ({ zoomCommand: { action, sequence: s.zoomCommand.sequence + 1 } })),
@@ -99,6 +114,7 @@ export const useJourney = create<JourneyState>((set, get) => ({
   setReady: () => set({ ready: true }),
   setStage: (stage) => {
     if (stage === 'reveal' && get().journeyStep !== 'connected') return
+    if (stage === 'reveal' && !get().clientProfile) {get().requestEmblem();return}
     if ((stage === 'reveal' || stage === 'garment' || stage === 'world') && (!get().origin || !get().destination)) return
     const current = get()
     const creating = stage === 'reveal' && current.stage !== 'reveal'
@@ -116,5 +132,5 @@ export const useJourney = create<JourneyState>((set, get) => ({
   setHovered: (hovered) => set({ hovered }),
   setLighting: (lighting) => set({ lighting }),
   setEnvironment: (env) => set(env),
-  restart: () => set({ editorOpen: false, journeyStep: 'origin', stage: 'q1', origin: null, destination: null, hovered: null, lighting: 'night', emblemReady: false, garmentIndex: 0, worldSection: 'Collection' }),
+  restart: () => set({ profileOpen:false, mapView: 'globe', editorOpen: false, journeyStep: 'origin', stage: 'q1', origin: null, destination: null, hovered: null, lighting: 'night', emblemReady: false, garmentIndex: 0, worldSection: 'Collection' }),
 }))

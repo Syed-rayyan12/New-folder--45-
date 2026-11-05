@@ -2,26 +2,22 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ArrowLeft, ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react'
 import { getLocation, LOCATIONS, type LocationId } from '@/lib/locations'
 import { greatCircleKm } from '@/lib/geo'
-import { locationStatements, mixedStatements } from '@/lib/statements'
+import { locationStatement } from '@/lib/statements'
 import { useJourney } from '@/lib/store'
 
 function JourneyPrompt({ canReveal, onHide }: { canReveal: boolean; onHide: () => void }) {
-  const { journeyStep: step, origin, destination, selectLocation, editJourney, restart, setStage, reducedMotion } = useJourney()
+  const { journeyStep: step, origin, destination, selectLocation, editJourney, restart, requestEmblem, clientLocation, reducedMotion } = useJourney()
   const [custom, setCustom] = useState(false)
   const [error, setError] = useState('')
-  const [statementIndex, setStatementIndex] = useState(0)
-  const [statementSource, setStatementSource] = useState<'origin' | 'destination' | 'both'>('both')
   const heading = useRef<HTMLHeadingElement>(null)
   const from = origin ? getLocation(origin) : null
   const to = destination ? getLocation(destination) : null
   const asking = step === 'origin' || step === 'destination'
   const first = step === 'origin'
   const connected = step === 'connected'
-  const place = statementSource === 'origin' ? from : to
-  const statements = connected && from && to ? statementSource === 'both' ? mixedStatements(from, to) : locationStatements(place!) : []
   const number = first ? '01' : connected ? '03' : '02'
   useEffect(() => { heading.current?.focus({ preventScroll: true }) }, [])
   const choose = (id: LocationId) => {
@@ -53,20 +49,16 @@ function JourneyPrompt({ canReveal, onHide }: { canReveal: boolean; onHide: () =
         <div><label>Latitude<input name="lat" type="number" step="any" min="-90" max="90" placeholder="−90 to 90" required /></label><label>Longitude<input name="lng" type="number" step="any" min="-180" max="180" placeholder="−180 to 180" required /></label></div>
         <div className="journey-actions"><button type="submit" className="journey-next">Use this place <ArrowRight size={15} /></button><button type="button" className="journey-text-action" onClick={() => { setCustom(false); setError('') }}>Choose from the map</button></div>
       </form>}
+      {!first&&clientLocation&&<button type="button" className="journey-text-action" onClick={()=>choose(`custom:${clientLocation.lat}:${clientLocation.lng}:Current%20location`)}>Use my current location <ArrowUpRight size={12}/></button>}
       <p className="journey-map-hint">You can also select a dot on the map.</p>
       {error && <p className="journey-error" role="alert">{error}</p>}
       {!first && <button type="button" className="journey-text-action" onClick={() => editJourney('origin')}><ArrowLeft size={12} /> Change your beginning</button>}
     </> : <>
-      <h2 id="journey-question" ref={heading} tabIndex={-1} className="journey-statement-title">{connected ? `${from?.name} → ${to?.name}` : place?.name}</h2>
-      <div className="journey-statement-tabs" role="group" aria-label="Statement location">
-        {(['origin','destination','both'] as const).map(source => <button type="button" key={source} aria-pressed={statementSource === source} onClick={() => { setStatementSource(source); setStatementIndex(0) }}>{source === 'origin' ? from?.name : source === 'destination' ? to?.name : 'Both places'}</button>)}
-      </div>
-      <blockquote key={statementSource + statementIndex} aria-live="polite">{statements[statementIndex % Math.max(1, statements.length)]}</blockquote>
-      <div className="journey-statement-navigation"><button type="button" aria-label="Previous statement" onClick={() => setStatementIndex((statementIndex + statements.length - 1) % statements.length)}><ChevronLeft size={15} /></button><span>{String(statementIndex + 1).padStart(2, '0')} / {statements.length} STATEMENTS</span><button type="button" aria-label="Next statement" onClick={() => setStatementIndex((statementIndex + 1) % statements.length)}><ChevronRight size={15} /></button></div>
-      {place && !connected && <p className="journey-coordinate-readout">{coordinate(place)}</p>}
-      {connected && from && to && <div className="journey-connected-coordinates"><span>{coordinate(from)}</span><i /><span>{coordinate(to)}</span><small>{Math.round(greatCircleKm(from, to)).toLocaleString()} KM CONNECTED</small></div>}
+      <h2 id="journey-question" ref={heading} tabIndex={-1} className="journey-statement-title">Your connected story.</h2>
+      <div className="journey-place-statements">{[from,to].filter((place):place is NonNullable<typeof from>=>Boolean(place)).map((place,index)=><article key={place.id}><h3>{index===0?'FROM':'NOW IN'} / {place.name}</h3><blockquote>{locationStatement(place)}</blockquote><p className="journey-coordinate-readout">{coordinate(place)}</p></article>)}</div>
+      {connected && from && to && <p className="journey-distance">{Math.round(greatCircleKm(from,to)).toLocaleString()} KM CONNECTED</p>}
       <div className="journey-actions">
-        <button type="button" className="journey-next" disabled={!canReveal} onClick={() => setStage('reveal')}>Reveal sacred emblem <ArrowUpRight size={16} /></button>
+        <button type="button" className="journey-next" disabled={!canReveal} onClick={requestEmblem}>Reveal sacred emblem <ArrowUpRight size={16} /></button>
         <button type="button" className="journey-text-action" onClick={() => editJourney('origin')}>Edit first location</button>
         <button type="button" className="journey-text-action" onClick={() => editJourney('destination')}>Edit second location</button>
         <button type="button" className="journey-text-action" onClick={restart}>Start a new journey</button>
