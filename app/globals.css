@@ -178,7 +178,7 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .flat-world-map.is-atlas .flat-map-connection{stroke:#438F44;filter:drop-shadow(0 0 3px #438f4455)}
 .flat-world-map.is-atlas .flat-map-dot,.flat-world-map.is-atlas .flat-map-dot.is-selected{fill:#67F163}
 .flat-world-map.is-atlas .flat-map-dot-ring{stroke:#67F163}
-.flat-world-map.is-atlas .flat-map-land{stroke:#2C312E;filter:none}
+.flat-world-map.is-atlas .flat-map-land{stroke:#67F163;filter:none}
 .flat-world-map.is-atlas .flat-map-graticule path{stroke:#438F44}
 
 /* Clear garment controls and comfortable separation beneath the drawing. */

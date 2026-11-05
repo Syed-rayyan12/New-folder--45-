@@ -13,4 +13,4 @@ export const OPACITY = {
 
 export const CONNECTION_COLOR = '#438F44' as const
 export const POINT_COLOR = '#67F163' as const
-export const MAP_OUTLINE_COLOR = '#2C312E' as const
+export const MAP_OUTLINE_COLOR = GLOBE_COLOR
