@@ -204,11 +204,14 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .mockup-carousel.is-orbit{touch-action:none;cursor:grab}
 .mockup-carousel.is-orbit.is-dragging{cursor:grabbing}
 
-.music-control{position:absolute;z-index:46;right:24px;bottom:24px;pointer-events:auto}
+.music-control{position:absolute;z-index:46;left:24px;bottom:24px;pointer-events:auto}
 .cosmic-experience .music-toggle{display:flex;align-items:center;justify-content:center;gap:9px;min-height:41px;padding:10px 13px;background:#262a27f5;border:1px solid #8a908c40;border-radius:7px;color:#a5b1a8;font:10px JetBrainsMono,monospace;letter-spacing:.7px;cursor:pointer;box-shadow:0 6px 25px #0003;backdrop-filter:blur(16px)}
 .cosmic-experience .music-toggle.is-playing{color:#67F163;border-color:#67f16366}
 .music-toggle:hover{background:#303a32}.music-toggle:focus-visible{outline:2px solid #67f163;outline-offset:4px}.music-toggle:disabled{cursor:wait;opacity:.65}
-.music-error{position:absolute;right:0;bottom:calc(100% + 10px);width:220px;padding:10px;background:#0b0e0b;border:1px solid #353d35;border-radius:5px;color:#c8d0ca;font:11px/1.6 JetBrainsMono,monospace}
-@media(max-width:640px){.music-control{right:12px;bottom:18px}.cosmic-experience .music-toggle{padding:10px;min-height:38px}.music-toggle span{display:none}}
+.music-error{position:absolute;left:0;bottom:calc(100% + 10px);width:220px;padding:10px;background:#0b0e0b;border:1px solid #353d35;border-radius:5px;color:#c8d0ca;font:11px/1.6 JetBrainsMono,monospace}
+.mockup-globe-return{position:absolute;top:24px;right:24px;z-index:6;pointer-events:auto}
+.mockup-globe-return button{display:flex;align-items:center;gap:8px;min-height:40px;padding:10px 13px;background:#262a27f5;border:1px solid #8a908c40;border-radius:7px;color:#a5b1a8;font:10px JetBrainsMono,monospace;backdrop-filter:blur(16px)}
+.mockup-globe-return button:hover{color:#67f163;border-color:#67f16366}
+@media(max-width:640px){.music-control{left:12px;bottom:18px}.cosmic-experience .music-toggle{padding:10px;min-height:38px}.music-toggle span{display:none}.mockup-globe-return{top:20px;right:12px}.mockup-globe-return button{font-size:9px;padding:9px 10px}}
 
 .mockup-back-unavailable{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;color:#939c93;font:11px/1.7 JetBrainsMono,monospace;max-width:220px;margin:auto}.mockup-back-unavailable>span{color:#67f163;letter-spacing:1.6px}.mockup-back-unavailable>p{margin:0}

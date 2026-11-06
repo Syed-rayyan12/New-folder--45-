@@ -10,8 +10,8 @@ import { createGlobeBrandSurface } from '@/lib/globe-brand-pose'
 
 export type GlobeBrandTarget={x:number;y:number;width:number}
 
-// Keep the globe's surface visible through the colored artwork itself.
-const GLOBE_LOGO_OPACITY = 0.3
+// Use the globe's shared neon color with enough body to read as part of its surface.
+const GLOBE_LOGO_OPACITY = 0.72
 
 /** A curved decal, parented to the Earth, with no camera-following transform. */
 export function GlobeBrand({orientation,canvas,visible=true,onTarget}:{orientation:Quaternion;canvas?:HTMLCanvasElement|null;visible?:boolean;onTarget?:(target:GlobeBrandTarget)=>void}){
