@@ -10,6 +10,9 @@ import { createGlobeBrandSurface } from '@/lib/globe-brand-pose'
 
 export type GlobeBrandTarget={x:number;y:number;width:number}
 
+// Keep the globe's surface visible through the colored artwork itself.
+const GLOBE_LOGO_OPACITY = 0.3
+
 /** A curved decal, parented to the Earth, with no camera-following transform. */
 export function GlobeBrand({orientation,canvas,visible=true,onTarget}:{orientation:Quaternion;canvas?:HTMLCanvasElement|null;visible?:boolean;onTarget?:(target:GlobeBrandTarget)=>void}){
   const camera=useThree(state=>state.camera),gl=useThree(state=>state.gl)
@@ -40,7 +43,7 @@ export function GlobeBrand({orientation,canvas,visible=true,onTarget}:{orientati
   useEffect(()=>()=>geometry.dispose(),[geometry])
   useEffect(()=>()=>texture?.dispose(),[texture])
   useFrame((_,delta)=>{
-    if(material.current)material.current.opacity=MathUtils.damp(material.current.opacity,(visible&&texture) ? .96 : 0,4,Math.min(delta,.1))
+    if(material.current)material.current.opacity=MathUtils.damp(material.current.opacity,(visible&&texture) ? GLOBE_LOGO_OPACITY : 0,4,Math.min(delta,.1))
     if(!onTarget||!mesh.current)return
     mesh.current.updateWorldMatrix(true,false)
     const rect=gl.domElement.getBoundingClientRect()
