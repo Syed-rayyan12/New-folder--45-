@@ -6,3 +6,81 @@
 @media(max-width:1100px){.dashboard{grid-template-columns:145px minmax(0,1fr)}.header{grid-template-columns:145px minmax(0,1fr)}.brand{font-size:25px;letter-spacing:6px}.headerMain{padding-right:24px}.sidebar nav button{padding-left:16px;font-size:10px;letter-spacing:1.5px}.metric{padding-left:18px;padding-right:12px}.metric h2{font-size:9px;letter-spacing:1.5px}.metric strong{font-size:35px}.metric p{font-size:10px}.middle{grid-template-columns:225px minmax(0,1fr)}.origins{padding-inline:18px}.country{font-size:9px}.chartHeading{right:20px}.chartHeading>span{font-size:8px;letter-spacing:.4px}.chartHeading h2{font-size:12px}.content{grid-template-rows:154px minmax(440px,1fr) 223px}.map{min-width:650px;position:absolute;left:50%;transform:translateX(-50%)}}
 @media(max-width:760px){.dashboard{display:block;border-radius:0;min-height:0}.header{display:grid;grid-template-columns:140px minmax(0,1fr);height:70px;position:sticky;top:0;background:#070907}.headerMain{padding:0 16px}.search{width:min(150px,36vw)}.account{margin-top:0}.account>button{font-size:10px;letter-spacing:1px}.accountMenu{top:30px}.sidebar{padding:0;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto}.sidebar nav{display:flex;min-width:max-content}.sidebar nav button{height:49px;padding:12px 17px;font-size:9px}.sidebar .active:before{left:16px;right:16px;top:auto;bottom:0;height:2px;width:auto}.content{display:block}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{height:144px;padding:18px 20px}.metric:nth-child(-n+2){border-bottom:1px solid var(--line)}.metric:nth-child(2){border-right:0}.metric strong{font-size:36px}.metric h2{font-size:9px}.middle{display:flex;flex-direction:column-reverse}.corridors{height:440px;border-bottom:1px solid var(--line)}.map{height:440px;min-width:0;width:100%;position:static;transform:none}.chartHeading{left:20px;right:20px}.chartHeading>span{font-size:7px;letter-spacing:.5px}.origins{border-right:0;padding:20px}.origins ol{height:auto;grid-template-rows:repeat(7,53px)}.country{font-size:11px}.barTrack{top:23px}.origins li button{padding-bottom:9px}.signals{padding:20px;border-right:0;padding-bottom:15px}.signals li{font-size:10px;gap:8px}.signals li time{font-size:9px;padding-right:0}.clearFilter{left:20px;bottom:2px}.tableHead{grid-template-columns:29px 1fr auto}.accountMenu{right:-5px}.chartHeading h2{font-size:11px}.brand{font-size:25px}}
 @media(max-width:420px){.search{width:100px}.header{grid-template-columns:130px minmax(0,1fr)}.headerMain{padding-inline:12px}.account>button{font-size:8px}.chartHeading>span{max-width:140px;font-size:7px}.corridors{height:340px}.map{height:340px;min-height:340px}}
+
+/* Quiet, coordinated motion: the overview settles in before its data resolves. */
+@media(prefers-reduced-motion:no-preference){
+  .header{animation:dashboard-header-in .45s cubic-bezier(.22,1,.36,1) backwards}
+  .sidebar nav button{animation:dashboard-nav-in .45s cubic-bezier(.22,1,.36,1) backwards;transition:color .2s ease,background-color .2s ease}
+  .sidebar nav button:nth-child(1){animation-delay:60ms}
+  .sidebar nav button:nth-child(2){animation-delay:95ms}
+  .sidebar nav button:nth-child(3){animation-delay:130ms}
+  .sidebar nav button:nth-child(4){animation-delay:165ms}
+  .sidebar nav button:nth-child(5){animation-delay:200ms}
+  .sidebar nav button:nth-child(6){animation-delay:235ms}
+  .sidebar nav button:nth-child(7){animation-delay:270ms}
+  .sidebar nav button:hover{background:#67f16308}
+  .sidebar .active:before{animation:dashboard-accent-in .35s cubic-bezier(.22,1,.36,1) backwards;transform-origin:center}
+  .metric{animation:dashboard-panel-in .6s cubic-bezier(.22,1,.36,1) backwards;transition:background-color .25s ease}
+  .metric:nth-child(1){animation-delay:80ms}
+  .metric:nth-child(2){animation-delay:150ms}
+  .metric:nth-child(3){animation-delay:220ms}
+  .metric:nth-child(4){animation-delay:290ms}
+  .metric strong{font-variant-numeric:tabular-nums;transition:color .25s ease,text-shadow .25s ease}
+  .metric:hover{background:#67f16305}
+  .metric:hover strong{color:#efffed;text-shadow:0 0 24px #67f1631c}
+  .origins{animation:dashboard-panel-in .65s cubic-bezier(.22,1,.36,1) .22s backwards}
+  .corridors{animation:dashboard-panel-in .75s cubic-bezier(.22,1,.36,1) .28s backwards}
+  .signals{animation:dashboard-panel-in .65s cubic-bezier(.22,1,.36,1) .36s backwards}
+  .origins li{animation:dashboard-row-in .5s cubic-bezier(.22,1,.36,1) .34s backwards}
+  .origins li:nth-child(2){animation-delay:.38s}
+  .origins li:nth-child(3){animation-delay:.42s}
+  .origins li:nth-child(4){animation-delay:.46s}
+  .origins li:nth-child(5){animation-delay:.5s}
+  .origins li:nth-child(6){animation-delay:.54s}
+  .origins li:nth-child(7){animation-delay:.58s}
+  .origins li button{transition:color .2s ease,background-color .2s ease}
+  .barTrack>span{transform-origin:left;animation:dashboard-bar-in .95s cubic-bezier(.22,1,.36,1) .45s backwards;transition:width .5s cubic-bezier(.22,1,.36,1),background-color .2s ease}
+  .origins li:nth-child(2) .barTrack>span{animation-delay:.5s}
+  .origins li:nth-child(3) .barTrack>span{animation-delay:.55s}
+  .origins li:nth-child(4) .barTrack>span{animation-delay:.6s}
+  .origins li:nth-child(5) .barTrack>span{animation-delay:.65s}
+  .origins li:nth-child(6) .barTrack>span{animation-delay:.7s}
+  .origins li:nth-child(7) .barTrack>span{animation-delay:.75s}
+  .origins li button:hover .barTrack>span,.origins li button[aria-pressed=true] .barTrack>span{background:#85ff79}
+  .map>image{animation:dashboard-map-in 1s ease .2s backwards}
+  .routePath{animation:dashboard-route-in 1.3s cubic-bezier(.25,.46,.45,.94) .4s backwards;transition:stroke .2s ease,stroke-width .2s ease,opacity .2s ease}
+  .corridor:nth-of-type(2) .routePath{animation-delay:.46s}
+  .corridor:nth-of-type(3) .routePath{animation-delay:.52s}
+  .corridor:nth-of-type(4) .routePath{animation-delay:.58s}
+  .corridor:nth-of-type(5) .routePath{animation-delay:.64s}
+  .corridor:nth-of-type(6) .routePath{animation-delay:.7s}
+  .corridor:nth-of-type(7) .routePath{animation-delay:.76s}
+  .routeDot{transition:fill .2s ease,opacity .2s ease}
+  .selectedCorridor .routePath{stroke:#85ff79;filter:drop-shadow(0 0 3px #67f16345)}
+  .selectedCorridor .routeDot{animation:dashboard-node-breathe 3s ease-in-out infinite}
+  .tooltip{animation:dashboard-tooltip-in .2s ease-out backwards}
+  .signals li{animation:dashboard-row-in .5s cubic-bezier(.22,1,.36,1) .45s backwards;transition:background-color .2s ease,color .2s ease}
+  .signals li:nth-child(2){animation-delay:.51s}
+  .signals li:nth-child(3){animation-delay:.57s}
+  .signals li:nth-child(4){animation-delay:.63s}
+  .signals li:hover{background:#67f16305;color:#c3cec3}
+  .search{transition:border-color .2s ease}
+  .search:focus-within{border-color:#67f163}
+  .account>button svg{transition:transform .25s ease}
+  .account>button[aria-expanded=true] svg{transform:rotate(180deg)}
+  .accountMenu{animation:dashboard-menu-in .2s cubic-bezier(.22,1,.36,1) backwards;transform-origin:top right}
+  .drawerBackdrop{animation:dashboard-map-in .2s ease backwards}
+  .drawer{animation:dashboard-drawer-in .35s cubic-bezier(.22,1,.36,1) backwards}
+}
+@keyframes dashboard-header-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dashboard-nav-in{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+@keyframes dashboard-accent-in{from{opacity:0;transform:scaleY(.25)}to{opacity:1;transform:scaleY(1)}}
+@keyframes dashboard-panel-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dashboard-row-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes dashboard-bar-in{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes dashboard-map-in{from{opacity:0}to{opacity:1}}
+@keyframes dashboard-route-in{from{stroke-dasharray:1400;stroke-dashoffset:1400;opacity:0}to{stroke-dasharray:1400;stroke-dashoffset:0;opacity:.9}}
+@keyframes dashboard-node-breathe{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes dashboard-tooltip-in{from{opacity:0}to{opacity:1}}
+@keyframes dashboard-menu-in{from{opacity:0;transform:translateY(-5px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes dashboard-drawer-in{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
