@@ -24,8 +24,6 @@ export const STAGE_LABELS: Record<Stage, string> = {
 }
 
 type JourneyState = {
-  globeStyle: 'original' | 'network'
-  setGlobeStyle: (style: 'original' | 'network') => void
   clientLocation: ClientCoordinates|null
   setClientLocation: (location:ClientCoordinates)=>void
   clientProfile: ClientProfile|null
@@ -75,8 +73,6 @@ type JourneyState = {
 }
 
 export const useJourney = create<JourneyState>((set, get) => ({
-  globeStyle: 'original',
-  setGlobeStyle: (globeStyle) => set({ globeStyle, mapView: 'globe', hovered: null }),
   clientLocation:null,
   setClientLocation:(clientLocation)=>set({clientLocation}),
   clientProfile:null,

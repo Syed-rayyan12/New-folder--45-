@@ -16,6 +16,12 @@ node_modules
 .DS_Store
 .tools/
 .scene-check/
+.npm-cache/
+backend/.postgres/
+backend/.runtime/
+# Keep the Express service and local Next.js bridge on this machine only.
+/backend/
+/app/api/backend/
 *.tsbuildinfo
 .env
 .env.local

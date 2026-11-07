@@ -204,7 +204,11 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .mockup-carousel.is-orbit{touch-action:none;cursor:grab}
 .mockup-carousel.is-orbit.is-dragging{cursor:grabbing}
 
-.music-control{position:absolute;z-index:46;left:24px;bottom:24px;pointer-events:auto}
+.guided-experience{--journey-left-edge:4vw}
+.guided-experience .journey-prompt,.guided-experience .journey-prompt.is-statement{left:var(--journey-left-edge)}
+.music-control{position:fixed;z-index:46;left:var(--journey-left-edge,4vw);bottom:max(24px,env(safe-area-inset-bottom));pointer-events:auto}
+@media(max-width:900px){.guided-experience{--journey-left-edge:24px}}
+@media(max-width:640px){.guided-experience{--journey-left-edge:18px}}
 .cosmic-experience .music-toggle{display:flex;align-items:center;justify-content:center;gap:9px;min-height:41px;padding:10px 13px;background:#262a27f5;border:1px solid #8a908c40;border-radius:7px;color:#a5b1a8;font:10px JetBrainsMono,monospace;letter-spacing:.7px;cursor:pointer;box-shadow:0 6px 25px #0003;backdrop-filter:blur(16px)}
 .cosmic-experience .music-toggle.is-playing{color:#67F163;border-color:#67f16366}
 .music-toggle:hover{background:#303a32}.music-toggle:focus-visible{outline:2px solid #67f163;outline-offset:4px}.music-toggle:disabled{cursor:wait;opacity:.65}
@@ -212,6 +216,55 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .mockup-globe-return{position:absolute;top:24px;right:24px;z-index:6;pointer-events:auto}
 .mockup-globe-return button{display:flex;align-items:center;gap:8px;min-height:40px;padding:10px 13px;background:#262a27f5;border:1px solid #8a908c40;border-radius:7px;color:#a5b1a8;font:10px JetBrainsMono,monospace;backdrop-filter:blur(16px)}
 .mockup-globe-return button:hover{color:#67f163;border-color:#67f16366}
-@media(max-width:640px){.music-control{left:12px;bottom:18px}.cosmic-experience .music-toggle{padding:10px;min-height:38px}.music-toggle span{display:none}.mockup-globe-return{top:20px;right:12px}.mockup-globe-return button{font-size:9px;padding:9px 10px}}
+@media(max-width:640px){.music-control{bottom:max(18px,env(safe-area-inset-bottom))}.cosmic-experience .music-toggle{padding:10px;min-height:38px}.music-toggle span{display:none}.mockup-globe-return{top:20px;right:12px}.mockup-globe-return button{font-size:9px;padding:9px 10px}}
 
 .mockup-back-unavailable{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;color:#939c93;font:11px/1.7 JetBrainsMono,monospace;max-width:220px;margin:auto}.mockup-back-unavailable>span{color:#67f163;letter-spacing:1.6px}.mockup-back-unavailable>p{margin:0}
+
+/* Connected dashboard sign-in and landing profile feedback. */
+.dashboard-login{min-height:100svh;display:grid;place-items:center;padding:24px;background:#090c09;color:#d3d7d3}.dashboard-login form{width:min(420px,100%);padding:32px;border:1px solid #353d35;border-radius:12px;background:#111611;display:grid;gap:20px}.dashboard-login a{color:#67f163;letter-spacing:3px}.dashboard-login h1{font-size:24px;font-weight:400}.dashboard-login p{font-size:12px;line-height:1.7;color:#a5b1a8}.dashboard-login label{display:grid;gap:8px;font-size:12px}.dashboard-login input{width:100%;padding:12px;border:1px solid #353d35;background:#0b0e0b;color:#eee;border-radius:4px}.dashboard-login button{min-height:44px;background:#67f163;color:#102010;border:0;border-radius:4px}.dashboard-api-error{position:fixed;z-index:150;left:50%;top:12px;transform:translateX(-50%);max-width:90vw;padding:12px 18px;background:#321d15;color:#f9d4bb;font-size:12px;border:1px solid #866149;border-radius:5px}.dashboard-api-error button{margin-left:12px;background:none;border:0;color:#fff;text-decoration:underline}.client-consent{display:flex;gap:10px;align-items:flex-start;font-size:11px;line-height:1.6;color:#a5b1a8}.client-consent input{flex:none;margin-top:3px;accent-color:#67f163}
+
+/* Edge-to-edge rectangular map and a stable left-hand control area. */
+.guided-experience.is-flat-layout .cosmic-canvas{inset:0 0 0 50%;height:100%;z-index:1}
+.flat-map-viewport{position:absolute;inset:0;overflow:hidden;background:#020704;border:0;border-radius:0}
+.flat-map-viewport .flat-world-map.is-atlas{inset:0;background:#020704;border:0;border-radius:0}
+.flat-map-viewport .flat-world-map.is-atlas .flat-map-land{fill:currentColor;fill-opacity:.1;stroke:currentColor;stroke-opacity:.95;filter:drop-shadow(0 0 2px #67f16355)}
+.flat-map-viewport .flat-world-map.is-atlas .atlas-land-dots{opacity:.95}
+.guided-experience.is-flat-layout .space-vignette{right:50%;background:linear-gradient(90deg,#0002,transparent)}
+.guided-experience .map-top-controls{left:var(--journey-left-edge);right:auto;top:112px;width:calc(50% - var(--journey-left-edge) - 24px);display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.map-secondary-controls{display:flex;align-items:center;gap:10px;max-width:100%;flex-wrap:wrap}
+.guided-experience .map-top-controls .map-zoom-controls{position:static;inset:auto;transform:none;display:flex;flex-direction:row;flex:none;border-radius:7px}
+.map-top-controls .map-zoom-controls button{width:36px;height:39px}
+.map-top-controls .map-zoom-controls button+button{border-top:0;border-left:1px solid #8a908c30}
+.guided-experience .map-top-controls .galaxy-picker{position:static}
+.guided-experience .map-top-controls .galaxy-library{left:0;right:auto;top:calc(100% + 10px);width:min(550px,calc(50vw - var(--journey-left-edge) - 24px));max-width:none;max-height:calc(100dvh - 225px)}
+.guided-experience.is-map-stage .journey-prompt,.guided-experience.is-map-stage .journey-prompt.is-statement{top:240px;bottom:auto;width:min(340px,calc(50vw - var(--journey-left-edge) - 24px));max-height:calc(100dvh - 320px);overflow-y:auto}
+.guided-experience .journey-resume{left:var(--journey-left-edge);bottom:95px}
+@media(max-width:760px){.guided-experience .map-top-controls{top:92px;left:18px;right:18px;width:auto;flex-direction:row;align-items:center;gap:8px;flex-wrap:wrap}.map-secondary-controls{gap:8px}.guided-experience .map-top-controls .map-view-toggle button{width:auto;padding:5px 7px}.guided-experience .map-top-controls .map-view-toggle button span{display:inline;font-size:9px}.guided-experience .map-top-controls .galaxy-picker-trigger{height:38px}.map-top-controls .map-zoom-controls button{width:32px;height:36px}.guided-experience .map-top-controls .galaxy-library{width:calc(100vw - 36px);max-height:calc(100dvh - 195px)}.guided-experience.is-flat-layout .cosmic-canvas{inset:190px 0 auto;height:34dvh}.guided-experience.is-flat-layout .space-vignette{display:none}.guided-experience.is-map-stage .journey-prompt,.guided-experience.is-map-stage .journey-prompt.is-statement{left:18px;top:auto;bottom:78px;width:calc(100% - 36px);max-height:calc(66dvh - 285px);padding:16px}.guided-experience.is-flat-layout .journey-prompt,.guided-experience.is-flat-layout .journey-prompt.is-statement{top:calc(34dvh + 206px);bottom:auto}.guided-experience .journey-resume{left:18px;bottom:78px}}
+
+/* Restore the original control positions whenever the 3D globe is active. */
+.guided-experience:not(.is-flat-layout) .map-top-controls{left:auto;right:4vw;top:24px;width:auto;flex-direction:row;flex-wrap:nowrap;gap:10px}
+.guided-experience:not(.is-flat-layout) .map-secondary-controls{display:contents}
+.guided-experience:not(.is-flat-layout) .map-top-controls .map-zoom-controls{position:fixed;left:auto;right:24px;top:50%;bottom:auto;transform:translateY(-50%);flex-direction:column;border-radius:8px}
+.guided-experience:not(.is-flat-layout) .map-zoom-controls button{width:38px;height:38px}
+.guided-experience:not(.is-flat-layout) .map-zoom-controls button+button{border-left:0;border-top:1px solid #8a908c30}
+.guided-experience:not(.is-flat-layout) .map-top-controls .galaxy-picker{position:relative}
+.guided-experience:not(.is-flat-layout) .map-top-controls .galaxy-library{left:auto;right:0;width:550px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 92px)}
+.guided-experience.is-map-stage:not(.is-flat-layout) .journey-prompt,.guided-experience.is-map-stage:not(.is-flat-layout) .journey-prompt.is-statement{top:23vh;bottom:auto;max-height:calc(77dvh - 80px)}
+@media(max-width:900px) and (min-width:761px){.guided-experience.is-map-stage:not(.is-flat-layout) .journey-prompt,.guided-experience.is-map-stage:not(.is-flat-layout) .journey-prompt.is-statement{top:21vh}}
+@media(max-width:760px){.guided-experience:not(.is-flat-layout) .map-top-controls{left:auto;right:12px;top:21px;width:auto;gap:6px}.guided-experience:not(.is-flat-layout) .map-top-controls .map-view-toggle button{width:26px;padding:5px}.guided-experience:not(.is-flat-layout) .map-view-toggle button span{display:none}.guided-experience:not(.is-flat-layout) .map-top-controls .map-zoom-controls{right:12px;top:calc(50% - 85px)}.guided-experience:not(.is-flat-layout) .map-zoom-controls button{width:33px;height:33px}.guided-experience.is-map-stage:not(.is-flat-layout) .journey-prompt,.guided-experience.is-map-stage:not(.is-flat-layout) .journey-prompt.is-statement{top:auto;bottom:94px;max-height:45dvh}}
+
+/* One synchronized transition for the scene and its moving controls. */
+.globe-scene.is-inactive{visibility:hidden;pointer-events:none}
+.guided-experience.is-flat-layout .globe-scene{inset:0;height:100%;z-index:0}
+.cosmic-experience{view-transition-name:map-experience}
+.map-view-toggle{view-transition-name:map-view-switch}
+.galaxy-picker-trigger{view-transition-name:map-background-switch}
+.map-zoom-controls{view-transition-name:map-zoom-group}
+.map-zoom-controls button:nth-child(1){view-transition-name:map-zoom-in}
+.map-zoom-controls button:nth-child(2){view-transition-name:map-zoom-out}
+.map-zoom-controls button:nth-child(3){view-transition-name:map-zoom-reset}
+.journey-prompt{view-transition-name:map-question}
+.journey-resume{view-transition-name:map-question-resume}
+::view-transition-group(map-experience),::view-transition-group(map-view-switch),::view-transition-group(map-background-switch),::view-transition-group(map-zoom-group),::view-transition-group(map-zoom-in),::view-transition-group(map-zoom-out),::view-transition-group(map-zoom-reset),::view-transition-group(map-question),::view-transition-group(map-question-resume){animation-duration:600ms;animation-timing-function:cubic-bezier(.22,1,.36,1)}
+::view-transition-old(map-experience),::view-transition-new(map-experience){animation-duration:600ms;animation-timing-function:ease-in-out}
+@media(prefers-reduced-motion:reduce){::view-transition-group(*){animation-duration:.01ms}}

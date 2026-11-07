@@ -23,7 +23,7 @@ function Ready() {
   return null
 }
 
-export default function SceneCanvas({showBrand=false,brandCanvas,brandVisible=true,onBrandTarget}:{showBrand?:boolean;brandCanvas?:HTMLCanvasElement|null;brandVisible?:boolean;onBrandTarget?:(target:GlobeBrandTarget)=>void}) {
+export default function SceneCanvas({active=true,showBrand=false,brandCanvas,brandVisible=true,onBrandTarget}:{active?:boolean;showBrand?:boolean;brandCanvas?:HTMLCanvasElement|null;brandVisible?:boolean;onBrandTarget?:(target:GlobeBrandTarget)=>void}) {
   const reducedMotion = useJourney((s) => s.reducedMotion)
   const isMobile = useJourney((s) => s.isMobile)
   const stage = useJourney((s) => s.stage)
@@ -31,7 +31,7 @@ export default function SceneCanvas({showBrand=false,brandCanvas,brandVisible=tr
   const flat = mapView === 'flat' && !['reveal', 'garment', 'world'].includes(stage)
   const showBloom = !isMobile && (stage === 'reveal' || stage === 'garment' || stage === 'world')
   return (
-    <Canvas key="local-earth-jpeg-v2" dpr={isMobile ? 1 : 1.25} camera={{ position: [0, 0.7, 8.7], fov: 43 }} gl={{ antialias: true, alpha: true }}>
+    <Canvas key="local-earth-jpeg-v2" frameloop={active?'always':'never'} dpr={isMobile ? 1 : 1.25} camera={{ position: [0, 0.7, 8.7], fov: 43 }} gl={{ antialias: true, alpha: true }}>
       {flat && <FlatMapCamera />}
       <ambientLight intensity={0.24} color="#ffffff" />
       <directionalLight position={[-4, 3, 5]} intensity={1.8} color="#ffffff" />

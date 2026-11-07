@@ -33,3 +33,9 @@ function line(points:{lat:number;lng:number}[]){return points.map((place,i)=>{co
 export const ATLAS_LAND_PATH=WORLD_LAND_PATH.replace(/([ML])\s*(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)/g,(_,command,x,y)=>{const p=atlasProject({lat:90-Number(y)/H*180,lng:Number(x)/W*360-180});return `${command}${p.x.toFixed(3)},${p.y.toFixed(3)}`})
 export const ATLAS_MERIDIANS=[-150,-120,-90,-60,-30,0,30,60,90,120,150].map(lng=>({lng,path:line(Array.from({length:181},(_,i)=>({lat:i-90,lng})))}))
 export const ATLAS_PARALLELS=[-60,-30,0,30,60].map(lat=>({lat,path:line(Array.from({length:181},(_,i)=>({lat,lng:i*2-180})))}))
+export const ATLAS_OUTLINE_PATH=line([
+  ...Array.from({length:181},(_,i)=>({lat:90-i,lng:-180})),
+  ...Array.from({length:181},(_,i)=>({lat:-90,lng:i*2-180})),
+  ...Array.from({length:181},(_,i)=>({lat:i-90,lng:180})),
+  ...Array.from({length:181},(_,i)=>({lat:90,lng:180-i*2})),
+])+'Z'
