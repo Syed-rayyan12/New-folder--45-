@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { MockupAsset } from '@/lib/mockups'
 import { MockupGraphic } from './mockup-graphic'
+import dynamic from 'next/dynamic'
+
+const Mockup3DViewer=dynamic(()=>import('./mockup-3d-viewer'),{ssr:false,loading:()=> <span className="mockup-model-loading" role="status">Preparing 3D garment...</span>})
 
 // Space between the front slide and each rear slide at rest, in screen pixels.
 const MOCKUP_GAP_PX = 20
@@ -61,7 +64,7 @@ export function MockupCarousel({assets,asset,color,seed,replay,onChoose}:{assets
       {assets.map((item,i)=>{
         const active=i===index,net=rotation+i*step,front=(Math.cos(net*Math.PI/180)+1)/2
         return <div key={item.id} data-mockup-id={item.id} className={`mockup-orbit-slot${active?' is-active':''}`} role="group" aria-roledescription="slide" aria-label={`${i+1} of ${count}: ${item.name}`} aria-current={active?'true':undefined} style={{transform:`rotateY(${i*step}deg) translateZ(${radius}px)`}}>
-          <div className="mockup-orbit-image" style={{transform:`rotateY(${-net}deg) translateY(${-front*14}px) scale(${(.38+front*.62)*(active?zoom:1)})`,opacity:.48+front*.52}}><div className="mockup-product-turn" style={{transform:active?`rotateX(${productRotation.x}deg) rotateY(${productRotation.y}deg)`:undefined}}><div className="mockup-product-face is-front"><MockupGraphic asset={item} color={color} seed={seed} replay={active?replay+localReplay:0} showEmblem={active}/></div><div className="mockup-product-face is-back"><MockupGraphic asset={item} color={color} seed={seed} replay={active?replay+localReplay:0} side="back" showEmblem={false}/></div></div></div>
+          <div className={`mockup-orbit-image${item.modelSrc?' is-model':''}`} style={{transform:`rotateY(${-net}deg) translateY(${item.modelSrc?0:-front*14}px) scale(${(.38+front*.62)*(active&&!item.modelSrc?zoom:1)})`,opacity:.48+front*.52}}>{item.modelSrc?<div className={`mockup-model-shell${active?' is-active':''}`}><Mockup3DViewer asset={item} color={color} seed={seed} replay={active?replay+localReplay:0} active={active}/></div>:<div className="mockup-product-turn" style={{transform:active?`rotateX(${productRotation.x}deg) rotateY(${productRotation.y}deg)`:undefined}}><div className="mockup-product-face is-front"><MockupGraphic asset={item} color={color} seed={seed} replay={active?replay+localReplay:0} showEmblem={active}/></div><div className="mockup-product-face is-back"><MockupGraphic asset={item} color={color} seed={seed} replay={active?replay+localReplay:0} side="back" showEmblem={false}/></div></div>}</div>
         </div>
       })}
     </div>

@@ -1,0 +1,13 @@
+# Blender 3.4.1 MTL File: 't-shirt-007.blend'
+# www.blender.org
+
+newmtl t-shirt-007
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Ns textures/t-shirt-007-roughness-metalness-4k.png
+map_Bump -bm 1.000000 textures/t-shirt-007-nrm-metalness-4k.png

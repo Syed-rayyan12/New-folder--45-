@@ -1,34 +1,57 @@
 'use client'
 
-import { Canvas, useFrame } from '@react-three/fiber'
-import { ContactShadows, OrbitControls } from '@react-three/drei'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
-import { Color, Group, MathUtils, Mesh, Plane, Vector3 } from 'three'
-import { RealisticGarment } from '../canvas/realistic-garment'
-import { TankGarment } from '../canvas/tank-garment'
-import { EmblemStamp } from '../canvas/assembling-emblem'
-import { useJourney } from '@/lib/store'
+import { Canvas, useLoader, useThree } from '@react-three/fiber'
+import { Html, OrbitControls } from '@react-three/drei'
+import { Component, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { FileLoader, PerspectiveCamera } from 'three'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
+import { ObjGarment } from '../canvas/obj-garment'
 import type { MockupAsset } from '@/lib/mockups'
 
-function Garment({asset,color,seed,replay}:{asset:MockupAsset;color:string;seed:number;replay:number}){
-  const root=useRef<Group>(null),elapsed=useRef(0)
-  const reduced=useJourney(s=>s.reducedMotion)
-  const clip=useMemo(()=>new Plane(new Vector3(0,1,0),-1.6),[])
-  const shade=color==='original'?(asset.id==='original-tank'?'#2bbb83':'#b4b8b3'):color
-  const c=new Color(shade),ink=c.r*.2126+c.g*.7152+c.b*.0722>.45?'#17201a':'#f0eee6'
-  const name=`${asset.id} ${asset.name}`.toLowerCase()
-  const kind=name.includes('hood')?'hoodie':name.includes('coat')||name.includes('jacket')?'coat':name.includes('tee')||name.includes('t-shirt')?'tee':'tank'
-  useEffect(()=>{elapsed.current=0;root.current?.traverse(object=>{if(object instanceof Mesh){const materials=Array.isArray(object.material)?object.material:[object.material];materials.forEach(material=>{material.clippingPlanes=[clip];material.clipShadows=true;material.needsUpdate=true})}})},[asset.id,kind,seed,replay,clip])
-  useFrame((_,delta)=>{elapsed.current=reduced?3:elapsed.current+Math.min(delta,.1);const t=MathUtils.smoothstep(elapsed.current,0,2.4);clip.constant=-MathUtils.lerp(1.6,-1.4,t)})
-  return <group ref={root} key={asset.id}>{kind==='tank'?<TankGarment color={shade}/>:<RealisticGarment kind={kind} color={shade}/>}<group position={[.28,.69,kind==='tank'?.303:.335]} scale={.09}><EmblemStamp seed={seed} color={ink}/></group></group>
+class ModelBoundary extends Component<{children:ReactNode;retry:()=>void},{failed:boolean}> {
+  state={failed:false}
+  static getDerivedStateFromError(){return {failed:true}}
+  render(){return this.state.failed?<div className="mockup-model-error" role="alert"><p>This 3D model could not load.</p><button type="button" onClick={this.props.retry}>Try again</button></div>:this.props.children}
 }
 
-export default function Mockup3DViewer({asset,color,seed,replay}:{asset:MockupAsset;color:string;seed:number;replay:number}){
-  const reduced=useJourney(s=>s.reducedMotion)
-  const [spin,setSpin]=useState(!reduced)
-  return <div className="mockup-3d-viewer"><Canvas shadows dpr={[1,1.5]} camera={{position:[0,.2,5.3],fov:38}} gl={{alpha:true,antialias:true}} onCreated={({gl})=>{gl.localClippingEnabled=true}}>
-    <ambientLight intensity={.85}/><directionalLight position={[3,5,5]} intensity={3.2} castShadow/><directionalLight position={[-4,2,2]} intensity={1.3}/><directionalLight position={[0,3,-4]} intensity={2.4}/>
-    <Suspense fallback={null}><Garment asset={asset} color={color} seed={seed} replay={replay}/><ContactShadows position={[0,-1.25,0]} opacity={.35} scale={6} blur={2.5} far={3} resolution={256}/></Suspense>
-    <OrbitControls makeDefault enablePan={false} enableZoom minDistance={3.4} maxDistance={7.5} minPolarAngle={.3} maxPolarAngle={Math.PI-.3} enableDamping dampingFactor={.07} autoRotate={spin} autoRotateSpeed={.7} onStart={()=>setSpin(false)}/>
-  </Canvas><div className="mockup-3d-hint"><span>DRAG TO ROTATE 360° · SCROLL / PINCH TO ZOOM</span><button type="button" onClick={()=>setSpin(!spin)} aria-pressed={spin}>{spin?'Pause rotation':'360° auto-spin'}</button></div></div>
+function FitCamera({reset,bounds,onFit}:{reset:number;bounds:[number,number,number];onFit:(distance:number)=>void}) {
+  const {camera,size,invalidate}=useThree()
+  useEffect(()=>{
+    if(!(camera instanceof PerspectiveCamera))return
+    const tangent=Math.tan(camera.fov*Math.PI/360)
+    const aspect=Math.max(.2,size.width/Math.max(1,size.height))
+    const distance=Math.max(bounds[1]/(2*tangent),bounds[0]/(2*tangent*aspect))*1.08+bounds[2]/2
+    camera.position.set(0,0,distance);camera.lookAt(0,0,0);camera.updateProjectionMatrix();onFit(distance);invalidate()
+  },[camera,size.width,size.height,reset,bounds,onFit,invalidate])
+  return null
+}
+
+export default function Mockup3DViewer({asset,color,seed,replay,active=true}:{asset:MockupAsset;color:string;seed:number;replay:number;active?:boolean}) {
+  const host=useRef<HTMLDivElement>(null)
+  const [attempt,setAttempt]=useState(0),[reset,setReset]=useState(0),[distance,setDistance]=useState(6)
+  const [bounds,setBounds]=useState<[number,number,number]>([2.8,2.8,1.2])
+  const [loaded,setLoaded]=useState(false)
+  const modelReady=useCallback((size:[number,number,number])=>{setBounds(size);setLoaded(true)},[])
+  useEffect(()=>{
+    const node=host.current;if(!node)return
+    // OrbitControls owns wheel/pinch zoom; don't also zoom the CSS carousel.
+    const stop=(event:WheelEvent)=>event.stopPropagation()
+    node.addEventListener('wheel',stop,{passive:true})
+    return()=>node.removeEventListener('wheel',stop)
+  },[])
+  const retry=()=>{setLoaded(false);useLoader.clear(OBJLoader,asset.modelSrc!);useLoader.clear(FileLoader,asset.materialSrc!);setAttempt(value=>value+1)}
+  return <div ref={host} className="mockup-3d-viewer" data-model-src={asset.modelSrc} data-model-state={loaded?'ready':'loading'} aria-busy={!loaded} onKeyDown={event=>{if(active)event.stopPropagation()}} onPointerDown={event=>{if(active)event.stopPropagation()}} onDoubleClick={event=>{event.stopPropagation();setReset(value=>value+1)}}>
+    <ModelBoundary key={`${asset.id}-${attempt}`} retry={retry}>
+      <Canvas frameloop="demand" dpr={active?[1,1.5]:1} resize={{offsetSize:true}} camera={{position:[0,0,6],fov:35}} gl={{alpha:true,antialias:true}} onCreated={({gl})=>{gl.localClippingEnabled=true}}>
+        <ambientLight intensity={.7}/><hemisphereLight args={['#e3efe0','#273328',1.5]}/>
+        <directionalLight position={[3,4,5]} intensity={2.4}/><directionalLight position={[-4,2,1]} intensity={1.1}/><directionalLight position={[1,3,-4]} intensity={2}/>
+        <Suspense fallback={<Html center><span className="mockup-model-loading" role="status">Loading 3D garment...</span></Html>}>
+          <ObjGarment asset={asset} color={color} seed={seed} replay={replay} active={active} onBounds={modelReady}/>
+        </Suspense>
+        <FitCamera reset={reset} bounds={bounds} onFit={setDistance}/>
+        <OrbitControls makeDefault enabled={active} enablePan={false} enableZoom minDistance={distance*.55} maxDistance={distance*1.8} minPolarAngle={.15} maxPolarAngle={Math.PI-.15} enableDamping dampingFactor={.08} rotateSpeed={.65} zoomSpeed={.7}/>
+      </Canvas>
+    </ModelBoundary>
+    {active&&<div className="mockup-3d-hint"><span>DRAG TO ROTATE / SCROLL TO ZOOM</span><button type="button" onClick={()=>setReset(value=>value+1)}>Reset view</button></div>}
+  </div>
 }

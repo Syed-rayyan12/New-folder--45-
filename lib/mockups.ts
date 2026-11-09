@@ -8,12 +8,14 @@ export type MockupAsset = {
   frontPrint?: {left:number;top:number;width:number}
   backSrc?: string
   tintGain?: number
+  modelSrc?: string
+  materialSrc?: string
 }
 
 export const DEFAULT_MOCKUPS: MockupAsset[] = [
-  { id:'original-tshirt', name:'Your T-Shirt', src:'/images/Green%20Crew-Neck%20T-Shirt%20Mockup.png', tintGain:2 },
-  { id:'original-hoodie', name:'Your Hoodie', src:'/images/hoodie.png', frontPrint:{left:50,top:52,width:12}, tintGain:2 },
-  { id:'original-long-sleeve', name:'Long Sleeve', src:'/images/Bright%20Green%20Long-Sleeve%20Crewneck%20Shirt.png', tintGain:2 },
+  { id:'original-tshirt', name:'Your T-Shirt', src:'/images/Green%20Crew-Neck%20T-Shirt%20Mockup.png', modelSrc:'/images/t-shirt-obj/t-shirt.obj', materialSrc:'/images/t-shirt-obj/t-shirt.mtl', tintGain:2 },
+  { id:'original-hoodie', name:'Your Hoodie', src:'/images/hoodie.png', modelSrc:'/images/hoodie-obj/hoodie.obj', materialSrc:'/images/hoodie-obj/hoodie.mtl', frontPrint:{left:50,top:52,width:12}, tintGain:2 },
+  { id:'original-long-sleeve', name:'Your Sweater', src:'/images/Bright%20Green%20Long-Sleeve%20Crewneck%20Shirt.png', modelSrc:'/images/sweater-obj/sweater.obj', materialSrc:'/images/sweater-obj/sweater.mtl', tintGain:2 },
 ]
 
 export const GARMENT_COLORS = [
