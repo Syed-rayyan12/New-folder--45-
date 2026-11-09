@@ -274,5 +274,6 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 
 /* Size the active OBJ around the middle of the slider, independently of image posters. */
 .mockup-center-stage.has-3d-model{inset:130px 22vw 100px}
+.mockup-center-stage.has-3d-model .mockup-expand{bottom:-56px}
 @media(max-width:900px) and (min-width:641px){.mockup-center-stage.has-3d-model{inset:145px 18vw 95px}}
 @media(max-width:640px){.mockup-center-stage.has-3d-model{inset:165px 0 100px}}

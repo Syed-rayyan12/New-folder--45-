@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Save, ShieldCheck, Trash2, X } from 'lucide-react'
+import { api } from '@/lib/backend-api'
 import styles from './settings-page.module.css'
 
-const STORAGE_KEY = 'prvlg-dashboard-profile-v1'
 const EMPTY_PROFILE = { accountEmail:'', email:'', phone:'', language:'' }
 
 function AccountNotice({ kind, onClose }) {
@@ -23,28 +23,20 @@ export function SettingsPage() {
   const [feedback,setFeedback] = useState('')
   const [passwordFeedback,setPasswordFeedback] = useState('')
   const [notice,setNotice] = useState(null)
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
-      if (stored && typeof stored === 'object') setProfile(Object.fromEntries(Object.keys(EMPTY_PROFILE).map(key => [key,typeof stored[key] === 'string' ? stored[key] : ''])))
-    } catch { /* Empty fields remain available when browser storage is blocked. */ }
-  }, [])
+  useEffect(() => {api('/dashboard/settings').then(data=>setProfile(data.profile)).catch(error=>setFeedback(error.message))}, [])
   const change = event => { setProfile(current => ({...current,[event.target.name]:event.target.value}));setSaved(false);setFeedback('') }
-  const save = event => {
+  const save = async event => {
     event.preventDefault()
-    try { localStorage.setItem(STORAGE_KEY,JSON.stringify(profile));setSaved(true);setFeedback('Changes saved on this device.') }
-    catch { setSaved(false);setFeedback('Changes could not be saved on this device. Please try again.') }
+    try {await api('/dashboard/settings',{method:'PUT',body:JSON.stringify(profile)});setSaved(true);setFeedback('Changes saved.')}catch(error){setSaved(false);setFeedback(error.message)}
   }
-  const password = event => {
+  const password = async event => {
     event.preventDefault()
     const form = event.currentTarget
     const data = new FormData(form)
     const next = String(data.get('newPassword') || '')
-    if (next.length < 10 || !/\d/.test(next) || !/[^A-Za-z0-9\s]/.test(next)) { setPasswordFeedback('Use at least 10 characters with a number and symbol.');return }
+    if (next.length < 12 || !/\d/.test(next) || !/[^A-Za-z0-9\s]/.test(next)) { setPasswordFeedback('Use at least 12 characters with a number and symbol.');return }
     if (next !== data.get('confirmPassword')) { setPasswordFeedback('The new passwords do not match.');return }
-    // Credentials are never persisted, logged, or sent without an account service.
-    form.reset()
-    setPasswordFeedback('Password changes are unavailable in this preview. No password has been changed or saved.')
+    try{await api('/dashboard/password',{method:'PUT',body:JSON.stringify({currentPassword:data.get('currentPassword'),newPassword:next})});form.reset();setPasswordFeedback('Password updated. Other sessions have been signed out.')}catch(error){setPasswordFeedback(error.message)}
   }
   return <div className={styles.page}>
     <header className={styles.pageHead}><div><h1>ACCOUNT SETTINGS</h1><p>Account, Security And Privacy Controls For Your Platform.</p></div><button type="submit" form="settings-profile" className={styles.saveButton}><Save size={13}/>{saved ? 'Changes Saved' : 'Save Changes'}</button></header>
@@ -59,7 +51,7 @@ export function SettingsPage() {
         </form></section>
         <section className={styles.card} aria-labelledby="change-password-heading"><header><h2 id="change-password-heading">CHANGE PASSWORD</h2></header><form onSubmit={password} className={styles.form}>
           <label>CURRENT PASSWORD<input aria-label="Current password" type="password" name="currentPassword" autoComplete="current-password" placeholder="••••••••••" required onChange={() => setPasswordFeedback('')}/></label>
-          <label>NEW PASSWORD<input aria-label="New password" type="password" name="newPassword" autoComplete="new-password" placeholder="••••••••••" minLength={10} required onChange={() => setPasswordFeedback('')}/><span className={styles.passwordHint}>At least 10 characters with a number and symbol.</span></label>
+          <label>NEW PASSWORD<input aria-label="New password" type="password" name="newPassword" autoComplete="new-password" placeholder="••••••••••" minLength={12} required onChange={() => setPasswordFeedback('')}/><span className={styles.passwordHint}>At least 10 characters with a number and symbol.</span></label>
           <label>CONFIRM NEW PASSWORD<input aria-label="Confirm new password" type="password" name="confirmPassword" autoComplete="new-password" placeholder="••••••••••" minLength={10} required onChange={() => setPasswordFeedback('')}/></label>
           <button type="submit" className={styles.secondaryButton}>Update Password</button>
           {passwordFeedback && <p role="status" className={styles.feedback}>{passwordFeedback}</p>}

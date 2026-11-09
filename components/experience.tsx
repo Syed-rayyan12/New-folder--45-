@@ -14,6 +14,7 @@ import { GuidedJourney } from './ui-layer/guided-journey'
 import { GarmentWorld } from './ui-layer/garment-world'
 import { GalaxyPicker } from './ui-layer/galaxy-picker'
 import { GalaxyBackdrop } from './ui-layer/galaxy-backdrop'
+import { JourneyPersistence } from './ui-layer/journey-persistence'
 import { FlatWorldMap } from './ui-layer/flat-world-map'
 
 const SceneCanvas = dynamic(() => import('./canvas/scene-canvas'), { ssr: false })
@@ -71,6 +72,7 @@ export function Experience() {
     return () => window.clearTimeout(timer)
   }, [stage, reducedMotion, setStage])
   return <main ref={root} className={`cosmic-experience guided-experience${!revealed ? ' is-map-stage' : ''}${flat?' is-flat-layout':''}${inWorld||transferring?' is-garment-world':''}`} data-lighting="night">
+    <JourneyPersistence/>
     <BrandIntro ready={ready} complete={introComplete} onTextureReady={setBrandCanvas} onComplete={()=>{setMapView('globe');setIntroComplete(true)}}/>
     {webgl!==null&&<GalaxyBackdrop/>}
     <div className={`cosmic-canvas globe-scene${flat?' is-inactive':''}`} inert={!introComplete||flat} aria-hidden={flat}>{webgl&&<SceneCanvas active={!flat} showBrand={!revealed} brandCanvas={brandCanvas} brandVisible={introComplete}/>}</div>

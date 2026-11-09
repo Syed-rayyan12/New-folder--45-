@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Eye, Pencil, Search, Trash2, X } from 'lucide-react'
-import { AUDIENCE_RECORDS, filterAudience } from './reference-data'
+import { filterAudience } from './reference-data'
+import { useDashboard } from './dashboard-data'
 import styles from './records.module.css'
 
-const STORAGE = 'prvlg-reference-audience-v1'
 const unique = (rows, field) => [...new Set(rows.map(row => row[field]))].sort()
 
 function ProfileDialog({ action, onClose, onSave, onDelete }) {
@@ -24,14 +24,13 @@ function ProfileDialog({ action, onClose, onSave, onDelete }) {
       <label>Stage<select name="stage" defaultValue={record.stage}>{['Waitlist','Left after mark','Left after destination'].map(value => <option key={value}>{value}</option>)}</select></label>
       <label>Source<select name="source" defaultValue={record.source}>{['Instagram','TikTok','Direct','Referral','Newsletter'].map(value => <option key={value}>{value}</option>)}</select></label>
       <label className={styles.consent}><input type="checkbox" name="consent" defaultChecked={record.consent} />Contact consent</label>
-      <p className={styles.localNote}>Changes are saved in this browser’s reference records.</p><button className={styles.outlineButton} type="submit">SAVE PROFILE</button>
-    </form> : mode === 'delete' ? <><p className={styles.dialogCopy}>Remove {record.id} from this browser’s audience records? You can undo this after removing it.</p><button className={`${styles.outlineButton} ${styles.danger}`} type="button" onClick={() => onDelete(record)}>REMOVE PROFILE</button></> : <dl className={styles.profileDetails}>{[['Origin',`${record.origin} · ${record.region}`],['Destination',`${record.city} · ${record.country}`],['Stage',record.stage],['Source',record.source],['Mark',record.mark],['Joined',record.joined],['Contact consent',record.consent ? 'Granted' : 'Not granted']].map(([label,value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
+      <p className={styles.localNote}>Changes are saved to your audience database.</p><button className={styles.outlineButton} type="submit">SAVE PROFILE</button>
+    </form> : mode === 'delete' ? <><p className={styles.dialogCopy}>Remove {record.id} from the audience database? You can undo this after removing it.</p><button className={`${styles.outlineButton} ${styles.danger}`} type="button" onClick={() => onDelete(record)}>REMOVE PROFILE</button></> : <dl className={styles.profileDetails}>{[['Name',`${record.fullName} ${record.lastName}`],['Email',record.email],['Phone',record.phone],['Current location',record.location],['Origin',`${record.origin} · ${record.region}`],['Destination',`${record.city} · ${record.country}`],['Stage',record.stage],['Source',record.source],['Mark',record.mark],['Joined',record.joined],['Contact consent',record.consent ? 'Granted' : 'Not granted']].map(([label,value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
   </dialog>
 }
 
 export function AudienceRecords({ dashboardSearch = '' }) {
-  const [records, setRecords] = useState(AUDIENCE_RECORDS)
-  const [loaded, setLoaded] = useState(false)
+  const {audience:records,mutate}=useDashboard()
   const [search, setSearch] = useState('')
   const [origin, setOrigin] = useState('')
   const [city, setCity] = useState('')
@@ -39,16 +38,11 @@ export function AudienceRecords({ dashboardSearch = '' }) {
   const [source, setSource] = useState('')
   const [action, setAction] = useState(null)
   const [removed, setRemoved] = useState(null)
-  useEffect(() => {
-    try { const saved = JSON.parse(localStorage.getItem(STORAGE) || 'null'); if (Array.isArray(saved) && saved.every(row => typeof row.id === 'string' && typeof row.origin === 'string' && typeof row.city === 'string')) setRecords(saved) } catch {}
-    setLoaded(true)
-  }, [])
-  useEffect(() => { if (loaded) { try { localStorage.setItem(STORAGE, JSON.stringify(records)) } catch {} } }, [records, loaded])
   const filtered = useMemo(() => filterAudience(records, { search:[dashboardSearch,search].filter(Boolean).join(' '), origin,city,corridor,source }), [records,dashboardSearch,search,origin,city,corridor,source])
   const corridorOptions = [...new Set(records.map(row => `${row.origin} → ${row.city}`))].sort()
   const filters = [ ['ORIGIN',origin,setOrigin,unique(records,'origin'),'All origins'], ['DESTINATION CITY',city,setCity,unique(records,'city'),'All cities'], ['CORRIDOR',corridor,setCorridor,corridorOptions,'All corridors'], ['SOURCE',source,setSource,unique(records,'source'),'All sources'] ]
   return <div className={styles.audiencePage}>
-    <header className={styles.pageHead}><div><h1>AUDIENCE RECORDS</h1><p>Search And Explore Individual Heritage Profiles.</p></div><span>20 Profiles · 13 With Contact Consent</span></header>
+    <header className={styles.pageHead}><div><h1>AUDIENCE RECORDS</h1><p>Search And Explore Individual Heritage Profiles.</p></div><span>{records.length} Profiles | {records.filter(row=>row.consent).length} With Contact Consent</span></header>
     <section className={`${styles.filters} ${styles.audienceFilters}`} aria-label="Audience filters">
       <label className={styles.searchFilter}>SEARCH<div><Search size={13} /><input aria-label="Search audience records" placeholder="ID, Place, Mark Source" value={search} onChange={e => setSearch(e.target.value)} /></div></label>
       {filters.map(([label,value,setValue,options,placeholder]) => <label key={label}>{label}<select aria-label={label} value={value} onChange={e => setValue(e.target.value)}><option value="">{placeholder}</option>{options.map(option => <option key={option}>{option}</option>)}</select></label>)}
@@ -59,7 +53,7 @@ export function AudienceRecords({ dashboardSearch = '' }) {
       <td><span className={`${styles.stage} ${record.stage === 'Waitlist' ? styles.waitlist : ''}`}><i />{record.stage}</span></td><td>{record.source}</td><td className={styles.mark}>{record.mark}</td><td className={styles.joined}>{record.joined}</td>
       <td><div className={styles.rowActions}><button type="button" title="View profile" aria-label={`View ${record.id}`} onClick={() => setAction({mode:'view',record})}><Eye size={15} /></button><button type="button" className={styles.editAction} title="Edit profile" aria-label={`Edit ${record.id}`} onClick={() => setAction({mode:'edit',record})}><Pencil size={14} /></button><button type="button" className={styles.deleteAction} title="Remove profile" aria-label={`Remove ${record.id}`} onClick={() => setAction({mode:'delete',record})}><Trash2 size={14} /></button></div></td>
     </tr>)}</tbody></table>{filtered.length === 0 && <div className={styles.noResults}>No profiles match these filters.<button type="button" onClick={() => { setSearch('');setOrigin('');setCity('');setCorridor('');setSource('') }}>Reset audience filters</button></div>}</div>
-    <footer className={styles.tableFooter}><span>Showing {filtered.length} of {records.length}</span>{removed && <span role="status">{removed.id} removed <button type="button" onClick={() => { setRecords(rows => [...rows,removed].sort((a,b) => a.id.localeCompare(b.id)));setRemoved(null) }}>Undo</button></span>}</footer>
-    {action && <ProfileDialog key={`${action.mode}-${action.record.id}`} action={action} onClose={() => setAction(null)} onSave={record => {setRecords(rows => rows.map(row => row.id === record.id ? record : row));setAction(null)}} onDelete={record => {setRemoved(record);setRecords(rows => rows.filter(row => row.id !== record.id));setAction(null)}} />}
+    <footer className={styles.tableFooter}><span>Showing {filtered.length} of {records.length}</span>{removed && <span role="status">{removed.id} removed <button type="button" onClick={async() => {if(await mutate(`/dashboard/audience/${removed.id}/restore`,'POST'))setRemoved(null)}}>Undo</button></span>}</footer>
+    {action && <ProfileDialog key={`${action.mode}-${action.record.id}`} action={action} onClose={() => setAction(null)} onSave={async record => {if(await mutate(`/dashboard/audience/${record.id}`,'PATCH',record)){setAction(null)}}} onDelete={async record => {if(await mutate(`/dashboard/audience/${record.id}`,'DELETE')){setRemoved(record);setAction(null)}}} />}
   </div>
 }

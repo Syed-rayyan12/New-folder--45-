@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import { ArrowRight, Download } from 'lucide-react'
-import { AUDIENCE_RECORDS, CORRIDOR_RECORDS, filterCorridors, routeLabel } from './reference-data'
+import { filterCorridors, routeLabel } from './reference-data'
+import { useDashboard } from './dashboard-data'
 import styles from './records.module.css'
 
 function Emblem({ index }) {
@@ -10,11 +11,12 @@ function Emblem({ index }) {
 }
 
 export function CorridorIntelligence({ dashboardSearch = '' }) {
+  const {audience:AUDIENCE_RECORDS,corridors:CORRIDOR_RECORDS}=useDashboard()
   const [origin,setOrigin] = useState(''), [city,setCity] = useState(''), [source,setSource] = useState('')
   const [selectedId,setSelectedId] = useState('kingston-london')
   const [weeks,setWeeks] = useState(12)
   const [exported,setExported] = useState(false)
-  const rows = useMemo(() => filterCorridors(CORRIDOR_RECORDS,{origin,city,source,search:dashboardSearch}),[origin,city,source,dashboardSearch])
+  const rows = useMemo(() => filterCorridors(CORRIDOR_RECORDS,{origin,city,source,search:dashboardSearch}),[CORRIDOR_RECORDS,origin,city,source,dashboardSearch])
   const selected = rows.find(row => row.id === selectedId) || rows[0]
   const summary = useMemo(() => {
     const totals = key => rows.reduce((result,row) => ({...result,[row[key]]:(result[row[key]] || 0)+row.audience}),{})
@@ -30,7 +32,8 @@ export function CorridorIntelligence({ dashboardSearch = '' }) {
     const url = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}))
     const link = document.createElement('a');link.href=url;link.download=`prvlg-${selected.id}-segment.csv`;link.click();window.setTimeout(() => URL.revokeObjectURL(url),1000);setExported(true)
   }
-  const values = selected ? Array.from({length:weeks},(_,i) => Math.round(selected.audience*(0.11+0.89*((i+1)/weeks)**1.4))) : []
+  const weekly = selected ? Array.from({length:weeks},(_,i) => selected.weekly?.[weeks-1-i] || 0) : []
+  const values = weekly.map((_,i)=>weekly.slice(0,i+1).reduce((sum,n)=>sum+n,0))
   const chartMax = selected ? Math.ceil(selected.audience/150)*150 : 600
   const chartPoints = values.map((value,i) => `${35+i/(weeks-1)*380},${235-value/chartMax*210}`).join(' ')
   return <div className={styles.corridorPage}>
@@ -45,6 +48,6 @@ export function CorridorIntelligence({ dashboardSearch = '' }) {
     </svg>{rows.length===0 && <p className={styles.mapNoResults}>No corridors match these filters.</p>}</section>
     <aside className={styles.selectedPanel}><h2>SELECTED CORRIDOR</h2>{selected ? <><div className={styles.routeNames}><div><span>{selected.fromCode}</span><strong>{selected.from}</strong><small>{selected.origin}</small></div><ArrowRight size={16} /><div><span>{selected.toCode}</span><strong>{selected.to}</strong><small>{selected.country}</small></div></div><dl><div><dt>AUDIENCE</dt><dd className={styles.audienceValue}>{selected.audience}</dd></div><div><dt>GROWTH · VS PRIOR 4 WKS</dt><dd className={styles.growth}>+{selected.growth.toFixed(1)}%</dd></div><div><dt>SHARE OF AUDIENCE</dt><dd>{selected.id==='kingston-london'?'18.8':selected.share.toFixed(1)}%</dd></div><div><dt>SOURCE</dt><dd>{source || 'All Sources'}</dd></div></dl><button type="button" className={styles.outlineButton} onClick={exportSegment}><Download size={13} />{exported ? 'SEGMENT EXPORTED' : 'EXPORT SEGMENT'}</button><p className={styles.exportNote}>{!origin&&!city&&!source&&selected.id==='kingston-london'?'4':sourceProfiles.length} profiles on record · contact fields for consented only</p><span className={styles.srOnly} role="status">{exported ? 'Reference segment CSV downloaded. No contact fields are included in these reference records.' : ''}</span></> : <p className={styles.exportNote}>Select a different filter to see a corridor.</p>}</aside></div>
     <div className={styles.corridorBottom}><section className={styles.ranking}><h2>TOP CORRIDORS</h2><div className={styles.rankingScroll}><table><thead><tr>{['#','ROUTE','EMBLEM','AUDIENCE','GROWTH','AUDIENCE SHARE'].map(label => <th key={label}>{label}</th>)}</tr></thead><tbody>{rows.map((row,i) => <tr key={row.id} className={selected?.id===row.id ? styles.selectedRow:''} onClick={() => {setSelectedId(row.id);setExported(false)}}><td>{String(i+1).padStart(2,'0')}</td><td><button type="button" onClick={() => {setSelectedId(row.id);setExported(false)}}>{routeLabel(row)}</button></td><td><Emblem index={CORRIDOR_RECORDS.indexOf(row)} /></td><td>{row.audience}</td><td className={styles.growth}>+{row.growth.toFixed(1)}%</td><td>{row.share.toFixed(1)}%</td></tr>)}</tbody></table></div></section>
-    <section className={styles.growthChart}><div className={styles.growthHeading}><div><h2>CORRIDOR GROWTH</h2><p>Cumulative audience · {selected ? routeLabel(selected):'No corridor selected'}</p></div><div role="group" aria-label="Growth chart period">{[8,12].map(value => <button type="button" key={value} aria-pressed={weeks===value} onClick={() => setWeeks(value)}>{value}</button>)}</div></div><svg viewBox="0 0 440 265" role="img" aria-label={`${weeks} week cumulative audience chart for ${selected ? routeLabel(selected):'no selected corridor'}`}><title>{selected ? `${routeLabel(selected)}: ${selected.audience} audience over ${weeks} weeks`:'No chart data'}</title>{[0,1,2,3,4].map(i => <g key={i}><line x1="35" x2="415" y1={235-i*52.5} y2={235-i*52.5} /><text x="8" y={239-i*52.5}>{Math.round(chartMax*i/4)}</text></g>)}{selected && <polyline points={chartPoints} fill="none" className={styles.growthLine} />}{['3 Aug','17 Aug','31 Aug','14 Sep','28 Sep','12 Oct'].map((label,i) => <text key={label} x={42+i*70} y="257">{label}</text>)}</svg></section></div>
+    <section className={styles.growthChart}><div className={styles.growthHeading}><div><h2>CORRIDOR GROWTH</h2><p>Cumulative audience · {selected ? routeLabel(selected):'No corridor selected'}</p></div><div role="group" aria-label="Growth chart period">{[8,12].map(value => <button type="button" key={value} aria-pressed={weeks===value} onClick={() => setWeeks(value)}>{value}</button>)}</div></div><svg viewBox="0 0 440 265" role="img" aria-label={`${weeks} week cumulative audience chart for ${selected ? routeLabel(selected):'no selected corridor'}`}><title>{selected ? `${routeLabel(selected)}: ${selected.audience} audience over ${weeks} weeks`:'No chart data'}</title>{[0,1,2,3,4].map(i => <g key={i}><line x1="35" x2="415" y1={235-i*52.5} y2={235-i*52.5} /><text x="8" y={239-i*52.5}>{Math.round(chartMax*i/4)}</text></g>)}{selected && <polyline points={chartPoints} fill="none" className={styles.growthLine} />}{Array.from({length:6},(_,i)=>new Date(Date.now()-(weeks-1)*(1-i/5)*7*86400000).toLocaleDateString('en-GB',{day:'numeric',month:'short'})).map((label,i) => <text key={label} x={42+i*70} y="257">{label}</text>)}</svg></section></div>
   </div>
 }

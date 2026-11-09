@@ -40,7 +40,7 @@ export default function Mockup3DViewer({asset,color,seed,replay,active=true}:{as
     return()=>node.removeEventListener('wheel',stop)
   },[])
   const retry=()=>{setLoaded(false);useLoader.clear(OBJLoader,asset.modelSrc!);useLoader.clear(FileLoader,asset.materialSrc!);setAttempt(value=>value+1)}
-  return <div ref={host} className="mockup-3d-viewer" data-model-src={asset.modelSrc} data-model-state={loaded?'ready':'loading'} aria-busy={!loaded} onKeyDown={event=>{if(active)event.stopPropagation()}} onPointerDown={event=>{if(active)event.stopPropagation()}} onDoubleClick={event=>{event.stopPropagation();setReset(value=>value+1)}}>
+  return <div ref={host} className="mockup-3d-viewer" role="group" aria-label={`${asset.name}. Drag to rotate, scroll or pinch to zoom, double-click to reset.`} data-model-src={asset.modelSrc} data-model-state={loaded?'ready':'loading'} aria-busy={!loaded} onKeyDown={event=>{if(active)event.stopPropagation()}} onPointerDown={event=>{if(active)event.stopPropagation()}} onDoubleClick={event=>{event.stopPropagation();setReset(value=>value+1)}}>
     <ModelBoundary key={`${asset.id}-${attempt}`} retry={retry}>
       <Canvas frameloop="demand" dpr={active?[1,1.5]:1} resize={{offsetSize:true}} camera={{position:[0,0,6],fov:35}} gl={{alpha:true,antialias:true}} onCreated={({gl})=>{gl.localClippingEnabled=true}}>
         <ambientLight intensity={.7}/><hemisphereLight args={['#e3efe0','#273328',1.5]}/>
@@ -52,6 +52,5 @@ export default function Mockup3DViewer({asset,color,seed,replay,active=true}:{as
         <OrbitControls makeDefault enabled={active} enablePan={false} enableZoom minDistance={distance*.55} maxDistance={distance*1.8} minPolarAngle={.15} maxPolarAngle={Math.PI-.15} enableDamping dampingFactor={.08} rotateSpeed={.65} zoomSpeed={.7}/>
       </Canvas>
     </ModelBoundary>
-    {active&&<div className="mockup-3d-hint"><span>DRAG TO ROTATE / SCROLL TO ZOOM</span><button type="button" onClick={()=>setReset(value=>value+1)}>Reset view</button></div>}
   </div>
 }
