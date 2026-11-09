@@ -1,0 +1,8 @@
+.scope{display:contents}
+
+@media(prefers-reduced-motion:no-preference){
+  /* Override mount-only animations: off-screen content waits for intersection. */
+  .scope [data-dashboard-reveal]{animation:none!important}
+  .scope [data-dashboard-reveal="pending"]{opacity:0}
+  .scope [data-dashboard-bar="true"]{transform-origin:left center}
+}
