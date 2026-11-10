@@ -24,10 +24,11 @@ function printTexture(seed:number,ink:string,back=false,glow=false,resolution=40
     const radius=Math.max(...emblem.strokes.flatMap(stroke=>stroke.points.map(p=>Math.hypot(p.x,p.y))))
     context.translate(resolution/2,resolution/2);context.scale(resolution*.43/(radius+.04),-resolution*.43/(radius+.04))
     context.strokeStyle=ink;context.lineCap='round';context.lineJoin='round'
-    if(glow)context.filter=`blur(${resolution/28}px)`
+    // Keep the halo close to each stroke so neighboring details stay separate.
+    if(glow)context.filter=`blur(${resolution/180}px)`
     for(const stroke of emblem.strokes){
-      const lineWidth=Math.max(stroke.thickness*1.7,.022)
-      context.beginPath();context.lineWidth=glow?lineWidth*5:lineWidth
+      const lineWidth=Math.max(stroke.thickness*1.25,.016)
+      context.beginPath();context.lineWidth=glow?lineWidth*1.6:lineWidth
       stroke.points.forEach((point,i)=>i?context.lineTo(point.x,point.y):context.moveTo(point.x,point.y))
       if(!glow){
         // A narrow dark stitch edge keeps luminous ink readable on light fabric.
@@ -67,10 +68,9 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   const coreMaterial=useRef<MeshBasicMaterial>(null)
   const pulseTime=useRef(0)
   const luminousInk=useMemo(()=>{
-    // Lift near-black ink into a visible tint and equalize brightness across hues.
+    // Keep hue detail without overexposing the sharp, unblurred core.
     const ink=new Color(monogramColor).lerp(new Color('#ffffff'),.08)
-    const luminance=ink.r*.2126+ink.g*.7152+ink.b*.0722
-    return ink.multiplyScalar(1.4/luminance)
+    return ink.multiplyScalar(.95/Math.max(ink.r,ink.g,ink.b))
   },[monogramColor])
   const invalidate=useThree(s=>s.invalidate)
   const gl=useThree(s=>s.gl)
@@ -98,7 +98,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   const shade=color==='original'?GLOBE_COLOR:color
   const ink=useMemo(()=>{const c=new Color(shade);return c.r*.2126+c.g*.7152+c.b*.0722>.4?'#142417':'#f2f0e8'},[shade])
   const front=useMemo(()=>printTexture(seed,'#ffffff',false,false,printResolution,anisotropy),[seed,printResolution,anisotropy])
-  const glow=useMemo(()=>printTexture(seed,'#ffffff',false,true,Math.min(1024,printResolution),anisotropy),[seed,printResolution,anisotropy])
+  const glow=useMemo(()=>printTexture(seed,'#ffffff',false,true,Math.min(2048,printResolution),anisotropy),[seed,printResolution,anisotropy])
   const back=useMemo(()=>printTexture(seed,ink,true,false,Math.min(2048,printResolution),anisotropy),[seed,ink,printResolution,anisotropy])
   useEffect(()=>{onBounds?.([prepared.size.x,prepared.size.y,prepared.size.z])},[prepared,onBounds])
   useEffect(()=>{prepared.material.color.set(shade);invalidate()},[shade,prepared,invalidate])
@@ -107,8 +107,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
     if(active&&!reduced){
       pulseTime.current+=Math.min(delta,.1)
       const pulse=(Math.sin(pulseTime.current*Math.PI/1.6)+1)/2
-      if(glowMaterial.current)glowMaterial.current.opacity=.75+pulse*.25
-      if(coreMaterial.current)coreMaterial.current.color.copy(luminousInk).multiplyScalar(.9+pulse*.3)
+      if(glowMaterial.current)glowMaterial.current.opacity=.18+pulse*.08
       invalidate()
     }
     if(!active||reduced||elapsed.current>=1.25)return
@@ -128,7 +127,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   return <group>
     <primitive object={prepared.group} dispose={null}/>
     {prepared.front&&<>
-      <mesh geometry={prepared.front} renderOrder={3} raycast={()=>{}}><meshBasicMaterial ref={glowMaterial} map={glow} color={luminousInk} transparent opacity={.95} blending={AdditiveBlending} depthWrite={false} polygonOffset polygonOffsetFactor={-3} polygonOffsetUnits={-3} toneMapped={false} clippingPlanes={[clip]}/></mesh>
+      <mesh geometry={prepared.front} renderOrder={3} raycast={()=>{}}><meshBasicMaterial ref={glowMaterial} map={glow} color={luminousInk} transparent opacity={.22} blending={AdditiveBlending} depthWrite={false} polygonOffset polygonOffsetFactor={-3} polygonOffsetUnits={-3} toneMapped={false} clippingPlanes={[clip]}/></mesh>
       <mesh geometry={prepared.front} renderOrder={4} raycast={()=>{}}><meshBasicMaterial ref={coreMaterial} map={front} color={luminousInk} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} toneMapped={false} clippingPlanes={[clip]}/></mesh>
     </>}
     {prepared.back&&<mesh geometry={prepared.back} renderOrder={3} raycast={()=>{}}><meshBasicMaterial map={back} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} toneMapped={false} clippingPlanes={[clip]}/></mesh>}
