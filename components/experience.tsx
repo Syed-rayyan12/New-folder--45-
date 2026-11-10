@@ -77,7 +77,7 @@ export function Experience() {
     {webgl!==null&&<GalaxyBackdrop/>}
     <div className={`cosmic-canvas globe-scene${flat?' is-inactive':''}`} inert={!introComplete||flat} aria-hidden={flat}>{webgl&&<SceneCanvas active={!flat} showBrand={!revealed} brandCanvas={brandCanvas} brandVisible={introComplete}/>}</div>
     {flat&&<div className="cosmic-canvas flat-scene" inert={!introComplete}><section className="flat-map-viewport" aria-label="Flat world map"><FlatWorldMap/></section></div>}
-    <div className="space-vignette"/>
+    {!inWorld&&!transferring&&<div className="space-vignette"/>}
     <ClientDialogs enabled={introComplete}/>
     {introComplete&&<MusicToggle/>}
     <div className={`experience-content${introComplete ? ' is-entered' : ''}${inWorld || transferring ? ' is-garment-world' : ''}`} inert={!introComplete} aria-hidden={!introComplete}>
