@@ -1,20 +1,17 @@
 import { Matrix4,Quaternion,Vector3 } from 'three'
+import { latLngToVector3 } from './geo'
+
+export const GLOBE_BRAND_ANCHOR={lat:32,lng:20} as const
 
 /** Capture one fixed print position in the Earth's local coordinate system. */
 export function createGlobeBrandSurface(cameraPosition:Vector3,cameraRotation:Quaternion,globeRotation:Quaternion){
-  const inverse=globeRotation.clone().invert()
-  // OrbitControls may not have oriented the camera on the first render yet.
-  // Derive the decal frame from the view ray so its center and baseline agree.
-  const facing=cameraPosition.clone().normalize()
-  const screenUp=new Vector3(0,1,0).applyQuaternion(cameraRotation)
-  const right=new Vector3().crossVectors(screenUp,facing)
-  if(right.lengthSq()<1e-8)right.crossVectors(new Vector3(0,0,1),facing)
-  right.normalize()
-  const up=new Vector3().crossVectors(facing,right).normalize()
-  const worldRotation=new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(right,up,facing))
-  const normal=facing.clone().applyQuaternion(inverse)
-  const rotation=inverse.multiply(worldRotation)
-  const size=new Vector3(1.8,1.8*194/330,.8)
+  // Open space inside the London / Lagos / Tehran triangle, over North Africa.
+  // Camera orbiting never moves the artwork onto another place.
+  const normal=latLngToVector3(GLOBE_BRAND_ANCHOR.lat,GLOBE_BRAND_ANCHOR.lng,1).normalize()
+  const right=new Vector3().crossVectors(new Vector3(0,1,0),normal).normalize()
+  const up=new Vector3().crossVectors(normal,right).normalize()
+  const rotation=new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(right,up,normal))
+  const size=new Vector3(1.22,1.22*194/330,.45)
   const samples:Vector3[]=[]
   for(const x of [-size.x/2,0,size.x/2])for(const y of [-size.y/2,0,size.y/2])samples.push(new Vector3(x,y,Math.sqrt(4-x*x-y*y)).applyQuaternion(rotation))
   return {position:normal.multiplyScalar(2.025),rotation,size,samples}

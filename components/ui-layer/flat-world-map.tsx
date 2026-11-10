@@ -39,7 +39,9 @@ export function FlatWorldMap() {
   useEffect(()=>{if(zoomCommand.sequence){if(zoomCommand.action==='reset')setView(initial);else zoomAt(zoomCommand.action==='in'?1/1.2:1.2)}},[zoomCommand,zoomAt,initial])
   useEffect(()=>{setView(initial);setHovered(null)},[initial,origin,destination])
   const choose=(place:Location)=>{selectLocation(place.id);setHovered(null)}
-  const hover=places.find(place=>place.id===hovered)
+  const currentHover=places.find(place=>place.id===hovered)
+  const [hover,setTooltipPlace]=useState<Location|undefined>(undefined)
+  useEffect(()=>{if(currentHover){setTooltipPlace(currentHover);return};const timer=window.setTimeout(()=>setTooltipPlace(undefined),300);return()=>window.clearTimeout(timer)},[currentHover])
   const hoverPoint=hover?project(hover):null
   const stop=(id:number)=>{pointers.current.delete(id)}
   return <div className="flat-world-map is-atlas" style={{color:GLOBE_COLOR}}><svg ref={svg} viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`} preserveAspectRatio="xMidYMid meet" role="group" aria-label="Interactive flat world map. Drag to pan, scroll or pinch to zoom." tabIndex={0}
@@ -57,5 +59,5 @@ export function FlatWorldMap() {
       {selected&&!active&&<text x={p.x} y={p.y+(place.id===origin?22:-14)*units} fontSize={11*units} textAnchor="middle" className="flat-map-place-label">{place.name}</text>}
     </g>})}</g>
 
-  </svg>{hover&&hoverPoint&&<div className="atlas-hover-tooltip" style={{left:Math.max(8,Math.min(size.width-296,(hoverPoint.x-view.x)/units+(size.width-view.w/units)/2+15)),top:Math.max(8,Math.min(size.height-215,(hoverPoint.y-view.y)/units+(size.height-view.h/units)/2-70))}}><LocationTooltip place={hover}/></div>}</div>
+  </svg>{hover&&hoverPoint&&<div className="atlas-hover-tooltip" style={{left:Math.max(8,Math.min(size.width-296,(hoverPoint.x-view.x)/units+(size.width-view.w/units)/2+15)),top:Math.max(8,Math.min(size.height-215,(hoverPoint.y-view.y)/units+(size.height-view.h/units)/2-70))}}><LocationTooltip place={hover} show={Boolean(currentHover)}/></div>}</div>
 }

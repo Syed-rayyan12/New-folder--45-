@@ -4,6 +4,7 @@ import type { ClientProfile,ClientLocationSource } from './client-profile'
 import type { LocationId } from './locations'
 import { wrapGarment, type WorldSection } from './garment-world'
 import { hashString } from './mark'
+import { SACRED_FAMILIES } from './sacred-emblem'
 import { GALAXY_BACKGROUNDS } from './galaxy-backgrounds'
 import type { MapView } from './geo'
 import { journeySelection, type JourneyStep } from './journey-flow'
@@ -34,6 +35,8 @@ type JourneyState = {
   saveClientProfile:(profile:ClientProfile,locationSource?:ClientLocationSource)=>void
   mockupId: string
   mockupColor: string
+  monogramColor: string
+  setMonogramColor: (color: string) => void
   setMockup: (id: string) => void
   setMockupColor: (color: string) => void
   journeyStep: JourneyStep
@@ -83,6 +86,8 @@ export const useJourney = create<JourneyState>((set, get) => ({
   saveClientProfile:(clientProfile,profileLocationSource='manual')=>{set({clientProfile,profileLocationSource,profileOpen:false});get().setStage('reveal')},
   mockupId: 'original-tshirt',
   mockupColor: 'original',
+  monogramColor: '#63ff34',
+  setMonogramColor: (monogramColor) => set({monogramColor}),
   setMockup: (mockupId) => set({mockupId}),
   setMockupColor: (mockupColor) => set({mockupColor}),
   journeyStep: 'origin',
@@ -123,7 +128,11 @@ export const useJourney = create<JourneyState>((set, get) => ({
     const creating = stage === 'reveal' && current.stage !== 'reveal'
     const freshSeed = creating ? hashString(`${current.origin}|${current.destination}|${current.emblemGeneration+1}|${globalThis.crypto.getRandomValues(new Uint32Array(1))[0]}`) : current.emblemSeed
     // Cycle the design family while varying details within it on each creation.
-    const emblemSeed = creating ? ((freshSeed & 0xfffffffc) | ((current.emblemSeed + 1) & 3)) >>> 0 : current.emblemSeed
+    // Seven is coprime with 24: vary the starting family and visit every design
+    // before repeating, rather than serving similar petal designs in a row.
+    const family=current.emblemGeneration===0 ? freshSeed % SACRED_FAMILIES.length : (current.emblemSeed % SACRED_FAMILIES.length + 7) % SACRED_FAMILIES.length
+    const seedBlocks=Math.floor(0x100000000/SACRED_FAMILIES.length)
+    const emblemSeed = creating ? ((freshSeed % seedBlocks)*SACRED_FAMILIES.length + family) : current.emblemSeed
     set({ stage, hovered: null, ...(creating ? { emblemSeed, emblemGeneration:current.emblemGeneration+1, emblemReady: false, garmentIndex: 0, worldSection: 'Collection' as const } : {}) })
   },
   selectLocation: (id) => {

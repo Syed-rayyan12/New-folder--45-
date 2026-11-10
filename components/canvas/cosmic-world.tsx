@@ -3,13 +3,14 @@
 import { LocationTooltip } from '@/components/ui-layer/location-tooltip'
 import { Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Group, Mesh, OrthographicCamera, Quaternion } from 'three'
 import { mapPosition, routeSegments } from '@/lib/geo'
 import { getLocation, LOCATIONS, type Location } from '@/lib/locations'
 import { useJourney } from '@/lib/store'
 import { POINT_COLOR } from '@/lib/palette'
 import { journeyOrientation } from '@/lib/globe-focus'
+import { GLOBE_BRAND_ANCHOR } from '@/lib/globe-brand-pose'
 import { Earth } from './earth'
 import { GlobeBrand, type GlobeBrandTarget } from './globe-brand'
 import { AnimatedRoute } from './animated-route'
@@ -24,6 +25,8 @@ function PlaceMarker({ place, selected }: { place: Location; selected: boolean }
   const stage = useJourney((s) => s.stage)
   const setHovered = useJourney((s) => s.setHovered)
   const active = hovered === place.id
+  const [tooltipPresent, setTooltipPresent] = useState(active)
+  useEffect(() => { if (active) { setTooltipPresent(true); return }; const timer = window.setTimeout(() => setTooltipPresent(false), 300); return () => window.clearTimeout(timer) }, [active])
   const mapView = useJourney(s => s.mapView)
   const position = mapPosition(place.lat, place.lng, 2.025, mapView)
   const dot = useRef<Mesh>(null)
@@ -50,7 +53,7 @@ function PlaceMarker({ place, selected }: { place: Location; selected: boolean }
     <mesh ref={dot} renderOrder={mapView === 'flat' ? 7 : 0} raycast={() => {}}>{mapView === 'flat' ? <circleGeometry args={[active ? 0.035 : selected ? 0.03 : 0.018, 24]} /> : <sphereGeometry args={[active ? 0.03 : selected ? 0.025 : 0.016, 16, 16]} />}<meshBasicMaterial color={POINT_COLOR} transparent depthWrite={false} depthTest={mapView !== 'flat'} toneMapped={false} /></mesh>
     <mesh ref={halo} renderOrder={mapView === 'flat' ? 6 : 0} raycast={() => {}}>{mapView === 'flat' ? <ringGeometry args={[0.04, selected || active ? 0.055 : 0.045, 24]} /> : <sphereGeometry args={[selected || active ? 0.055 : 0.035, 16, 16]} />}<meshBasicMaterial color={POINT_COLOR} depthTest={mapView !== 'flat'} transparent opacity={0.16} depthWrite={false} /></mesh>
     {selected && !active && <Html position={[0, mapView === 'flat' ? 0 : place.id === origin ? -0.12 : 0.18, 0]} center occlude={mapView !== 'flat'} zIndexRange={[9, 0]} style={{ pointerEvents: 'none' }}><div className="selected-place-label" style={mapView === 'flat' ? { transform: `translateY(${place.id === origin ? 25 : -25}px)` } : undefined}><span>{place.id === origin ? 'ORIGIN' : 'CONTINUATION'}</span><strong>{place.name}</strong></div></Html>}
-    {active && <Html center position={[0, 0.28, 0]} occlude={mapView !== 'flat'} zIndexRange={[30, 20]} style={{ pointerEvents: 'none' }}><div className="coordinate-tooltip-anchor" style={mapView === 'flat' ? {transform:'translateY(-35px)'} : undefined}><LocationTooltip place={place}/></div></Html>}
+    {tooltipPresent && <Html center position={[0, 0.28, 0]} occlude={mapView !== 'flat'} zIndexRange={[30, 20]} style={{ pointerEvents: 'none' }}><div className="coordinate-tooltip-anchor" style={mapView === 'flat' ? {transform:'translateY(-35px)'} : undefined}><LocationTooltip place={place} show={active}/></div></Html>}
     </group>
   </group>
 }
@@ -66,14 +69,20 @@ export function CosmicWorld({showBrand=false,brandCanvas,brandVisible=true,onBra
   const gl = useThree((s) => s.gl)
   const reducedMotion = useJourney((s) => s.reducedMotion)
   const globe = useRef<Group>(null)
-  const fromRotation = useRef(journeyOrientation({lat:22,lng:80},null,camera.position))
+  const fromRotation = useRef(journeyOrientation(GLOBE_BRAND_ANCHOR,null,camera.position))
   const targetRotation = useRef(fromRotation.current.clone())
   const transition = useRef(1)
   const previousSelection = useRef({ origin, destination })
   useEffect(() => {
     if (!globe.current) return
     if (mapView === 'flat') { globe.current.quaternion.identity(); transition.current = 1; return }
-    if (!origin && !destination) { globe.current.quaternion.copy(fromRotation.current); return }
+    if (!origin && !destination) {
+      fromRotation.current.copy(journeyOrientation(GLOBE_BRAND_ANCHOR,null,camera.position))
+      targetRotation.current.copy(fromRotation.current)
+      globe.current.quaternion.copy(fromRotation.current)
+      transition.current=1
+      return
+    }
     fromRotation.current.copy(globe.current.quaternion)
     const previous = previousSelection.current
     const focus = origin !== previous.origin && origin ? origin : destination !== previous.destination && destination ? destination : stage === 'q1' ? origin ?? destination : destination ?? origin

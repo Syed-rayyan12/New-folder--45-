@@ -3,7 +3,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react'
-import { getLocation, LOCATIONS, type LocationId } from '@/lib/locations'
+import { getLocation, type LocationId } from '@/lib/locations'
+import { LocationPicker } from './location-picker'
 import { greatCircleKm } from '@/lib/geo'
 import { useJourney } from '@/lib/store'
 
@@ -40,9 +41,7 @@ function JourneyPrompt({ canReveal, onHide }: { canReveal: boolean; onHide: () =
       <h1 id="journey-question" ref={heading} tabIndex={-1}>{first ? 'Where does your story begin?' : 'Where are you now?'}</h1>
       <p className="journey-prompt-description">{first ? 'Choose the place you carry with you.' : `From ${from?.name ?? 'your beginning'}, to a new chapter.`}</p>
       {!first && from && <p className="journey-coordinate-readout journey-first-coordinate">{coordinate(from)}</p>}
-      {!custom && <><label className="journey-input-label" htmlFor="journey-place">{first ? 'Your first location' : 'Your second location'}</label><select id="journey-place" className="journey-place-input" value="" onChange={e => e.target.value === 'custom' ? setCustom(true) : choose(e.target.value as LocationId)}>
-        <option value="" disabled>Choose a place</option>{LOCATIONS.map(location => <option key={location.id} value={location.id} disabled={!first && location.id === origin}>{location.name}, {location.country}</option>)}<option value="custom">Add your own coordinates</option>
-      </select><button type="button" className="journey-text-action" onClick={() => setCustom(true)}>Or enter exact coordinates <ArrowUpRight size={12} /></button></>}
+      {!custom && <><label className="journey-input-label" htmlFor="journey-place">{first ? 'Your first location' : 'Your second location'}</label><LocationPicker excludeId={first ? null : origin} onChoose={id => id === 'custom' ? setCustom(true) : choose(id)} /><button type="button" className="journey-text-action" onClick={() => setCustom(true)}>Or enter exact coordinates <ArrowUpRight size={12} /></button></>}
       {custom && <form className="journey-coordinate-form" onSubmit={add}>
         <label>Location name<input name="name" placeholder="Name your place" required maxLength={70} autoFocus /></label>
         <div><label>Latitude<input name="lat" type="number" step="any" min="-90" max="90" placeholder="−90 to 90" required /></label><label>Longitude<input name="lng" type="number" step="any" min="-180" max="180" placeholder="−180 to 180" required /></label></div>
