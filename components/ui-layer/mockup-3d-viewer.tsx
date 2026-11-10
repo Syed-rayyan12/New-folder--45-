@@ -6,7 +6,6 @@ import { Component, Suspense, useCallback, useEffect, useRef, useState, type Rea
 import { FileLoader, PerspectiveCamera } from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import { ObjGarment } from '../canvas/obj-garment'
-import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import type { MockupAsset } from '@/lib/mockups'
 
 class ModelBoundary extends Component<{children:ReactNode;retry:()=>void},{failed:boolean}> {
@@ -43,14 +42,13 @@ export default function Mockup3DViewer({asset,color,seed,replay,active=true}:{as
   const retry=()=>{setLoaded(false);useLoader.clear(OBJLoader,asset.modelSrc!);useLoader.clear(FileLoader,asset.materialSrc!);setAttempt(value=>value+1)}
   return <div ref={host} className="mockup-3d-viewer" role="group" aria-label={`${asset.name}. Drag to rotate, scroll or pinch to zoom, double-click to reset.`} data-model-src={asset.modelSrc} data-model-state={loaded?'ready':'loading'} aria-busy={!loaded} onKeyDown={event=>{if(active)event.stopPropagation()}} onPointerDown={event=>{if(active)event.stopPropagation()}} onDoubleClick={event=>{event.stopPropagation();setReset(value=>value+1)}}>
     <ModelBoundary key={`${asset.id}-${attempt}`} retry={retry}>
-      <Canvas frameloop="demand" dpr={active?2:1} resize={{offsetSize:true}} camera={{position:[0,0,6],fov:35}} gl={{alpha:true,antialias:true}} onCreated={({gl})=>{gl.localClippingEnabled=true}}>
+      <Canvas frameloop="demand" dpr={active?2:1} resize={{offsetSize:true}} camera={{position:[0,0,6],fov:35}} gl={{alpha:true,antialias:true}} onCreated={({gl})=>{gl.localClippingEnabled=true;gl.setClearColor(0x000000,0)}}>
         <ambientLight intensity={.7}/><hemisphereLight args={['#e3efe0','#273328',1.5]}/>
         <directionalLight position={[3,4,5]} intensity={2.4}/><directionalLight position={[-4,2,1]} intensity={1.1}/><directionalLight position={[1,3,-4]} intensity={2}/>
         <Suspense fallback={<Html center><span className="mockup-model-loading" role="status">Loading 3D garment...</span></Html>}>
           <ObjGarment asset={asset} color={color} seed={seed} replay={replay} active={active} onBounds={modelReady}/>
         </Suspense>
         <FitCamera reset={reset} bounds={bounds} onFit={setDistance}/>
-        {active&&<EffectComposer enableNormalPass={false} multisampling={4}><Bloom mipmapBlur luminanceThreshold={2} luminanceSmoothing={.2} intensity={2.8}/></EffectComposer>}
         <OrbitControls makeDefault enabled={active} enablePan={false} enableZoom minDistance={distance*.28} maxDistance={distance*1.8} minPolarAngle={.15} maxPolarAngle={Math.PI-.15} enableDamping dampingFactor={.08} rotateSpeed={.65} zoomSpeed={.7}/>
       </Canvas>
     </ModelBoundary>
