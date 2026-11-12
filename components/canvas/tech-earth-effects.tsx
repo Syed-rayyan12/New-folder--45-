@@ -3,7 +3,7 @@
 import { useTexture } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { AdditiveBlending, BufferAttribute, BufferGeometry, CanvasTexture, CatmullRomCurve3, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, SRGBColorSpace, TubeGeometry, Vector3 } from 'three'
+import { AdditiveBlending, BufferAttribute, BufferGeometry, CatmullRomCurve3, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, TubeGeometry, Vector3 } from 'three'
 import type { Location } from '@/lib/locations'
 import { mapPosition, routeSegments } from '@/lib/geo'
 import { POINT_COLOR, CONNECTION_COLOR } from '@/lib/palette'
@@ -17,15 +17,6 @@ export function TechPlaceEffect({ place, selected }: { place: Location; selected
   const elapsed=useRef((Math.abs(place.lat)+Math.abs(place.lng))%1)
   const [aperture,pillar]=useTexture(['/vendor/ghostcat-earth/aperture.png','/vendor/ghostcat-earth/light_column.png'])
   const rotation=useMemo(()=>mapView === 'flat' ? new Quaternion() : new Quaternion().setFromUnitVectors(new Vector3(0,0,1),mapPosition(place.lat,place.lng,1,mapView)),[place.lat,place.lng,mapView])
-  const label=useMemo(()=>{
-    const canvas=document.createElement('canvas');canvas.width=384;canvas.height=80
-    const ctx=canvas.getContext('2d')!
-    ctx.fillStyle='rgba(5,24,10,.82)';ctx.fillRect(1,9,382,62)
-    ctx.strokeStyle='#76ff76';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,9);ctx.lineTo(384,9);ctx.stroke()
-    ctx.font='500 28px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#e7f7ff';ctx.fillText(place.name,192,42,354)
-    const texture=new CanvasTexture(canvas);texture.colorSpace=SRGBColorSpace;return texture
-  },[place.name])
-  useEffect(()=>()=>label.dispose(),[label])
   useFrame((_,delta)=>{
     if(!reduced)elapsed.current+=Math.min(delta,.05)*.38
     const t=reduced?.5:elapsed.current%1
@@ -38,7 +29,6 @@ export function TechPlaceEffect({ place, selected }: { place: Location; selected
       <mesh ref={wave} scale={.12}><planeGeometry args={[1,1]}/><meshBasicMaterial ref={waveMaterial} map={aperture} color={POINT_COLOR} transparent depthWrite={false} blending={AdditiveBlending}/></mesh>
       {mapView !== 'flat' && [0,Math.PI/2].map(angle=><group key={angle} rotation={[0,0,angle]}><mesh position={[0,0,.22]} rotation={[Math.PI/2,0,0]}><planeGeometry args={[.045,.44]}/><meshBasicMaterial map={pillar} color={POINT_COLOR} transparent opacity={selected?.85:.55} depthWrite={false} side={DoubleSide} blending={AdditiveBlending}/></mesh></group>)}
     </group>
-    {mapView !== 'flat' && !selected&&<sprite position={mapPosition(place.lat,place.lng,2.22,mapView)} scale={[Math.min(.62,.24+place.name.length*.023),.12,1]} raycast={()=>{}}><spriteMaterial map={label} transparent depthWrite={false} toneMapped={false}/></sprite>}
   </>
 }
 

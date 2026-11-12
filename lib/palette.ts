@@ -11,6 +11,6 @@ export const OPACITY = {
   full: 1,
 } as const
 
-export const CONNECTION_COLOR = '#438F44' as const
-export const POINT_COLOR = '#67F163' as const
+export const CONNECTION_COLOR = '#FFFFFF' as const
+export const POINT_COLOR = '#B7FF75' as const
 export const MAP_OUTLINE_COLOR = GLOBE_COLOR

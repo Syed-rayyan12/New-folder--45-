@@ -4,7 +4,7 @@ import { LocationTooltip } from '@/components/ui-layer/location-tooltip'
 import { Html } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Group, Mesh, OrthographicCamera, Quaternion } from 'three'
+import { Group, Mesh, OrthographicCamera, Quaternion, Vector3 } from 'three'
 import { mapPosition, routeSegments } from '@/lib/geo'
 import { getLocation, LOCATIONS, type Location } from '@/lib/locations'
 import { useJourney } from '@/lib/store'
@@ -21,7 +21,6 @@ import { TECH_EARTH_LOCATIONS } from '@/lib/tech-earth-locations'
 
 function PlaceMarker({ place, selected }: { place: Location; selected: boolean }) {
   const hovered = useJourney((s) => s.hovered)
-  const origin = useJourney((s) => s.origin)
   const stage = useJourney((s) => s.stage)
   const setHovered = useJourney((s) => s.setHovered)
   const active = hovered === place.id
@@ -29,19 +28,23 @@ function PlaceMarker({ place, selected }: { place: Location; selected: boolean }
   useEffect(() => { if (active) { setTooltipPresent(true); return }; const timer = window.setTimeout(() => setTooltipPresent(false), 300); return () => window.clearTimeout(timer) }, [active])
   const mapView = useJourney(s => s.mapView)
   const position = mapPosition(place.lat, place.lng, 2.025, mapView)
+  const markerGroup = useRef<Group>(null)
+  const worldPosition = useMemo(() => new Vector3(), [])
   const dot = useRef<Mesh>(null)
   const halo = useRef<Mesh>(null)
   const hit = useRef<Mesh>(null)
   useFrame(state => {
     const camera = state.camera
-    const scale = mapView === 'flat' && camera instanceof OrthographicCamera ? 3 / (camera.zoom * 0.018) : 1
+    markerGroup.current?.getWorldPosition(worldPosition)
+    const unitsPerPixel = state.viewport.getCurrentViewport(camera, worldPosition).height / state.size.height
+    const scale = mapView === 'flat' && camera instanceof OrthographicCamera ? 3 / (camera.zoom * 0.018) : unitsPerPixel * (active ? 6 / .03 : selected ? 5 / .025 : 3 / .016)
     dot.current?.scale.setScalar(scale)
     halo.current?.scale.setScalar(scale)
-    hit.current?.scale.setScalar(mapView === 'flat' && camera instanceof OrthographicCamera ? 9 / (camera.zoom * 0.065) : 1)
+    hit.current?.scale.setScalar(mapView === 'flat' && camera instanceof OrthographicCamera ? 9 / (camera.zoom * 0.065) : unitsPerPixel * 11 / .065)
   })
   return <group>
     <TechPlaceEffect place={place} selected={selected || active} />
-    <group position={position}>
+    <group ref={markerGroup} position={position}>
     <mesh ref={hit} onPointerOver={(e) => { e.stopPropagation(); setHovered(place.id) }} onPointerOut={() => { if (useJourney.getState().hovered === place.id) setHovered(null) }} onClick={(e) => {
       e.stopPropagation()
       if (stage === 'reveal') return
@@ -50,9 +53,8 @@ function PlaceMarker({ place, selected }: { place: Location; selected: boolean }
       <sphereGeometry args={[0.065, 12, 12]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} />
     </mesh>
-    <mesh ref={dot} renderOrder={mapView === 'flat' ? 7 : 0} raycast={() => {}}>{mapView === 'flat' ? <circleGeometry args={[active ? 0.035 : selected ? 0.03 : 0.018, 24]} /> : <sphereGeometry args={[active ? 0.03 : selected ? 0.025 : 0.016, 16, 16]} />}<meshBasicMaterial color={POINT_COLOR} transparent depthWrite={false} depthTest={mapView !== 'flat'} toneMapped={false} /></mesh>
-    <mesh ref={halo} renderOrder={mapView === 'flat' ? 6 : 0} raycast={() => {}}>{mapView === 'flat' ? <ringGeometry args={[0.04, selected || active ? 0.055 : 0.045, 24]} /> : <sphereGeometry args={[selected || active ? 0.055 : 0.035, 16, 16]} />}<meshBasicMaterial color={POINT_COLOR} depthTest={mapView !== 'flat'} transparent opacity={0.16} depthWrite={false} /></mesh>
-    {selected && !active && <Html position={[0, mapView === 'flat' ? 0 : place.id === origin ? -0.12 : 0.18, 0]} center occlude={mapView !== 'flat'} zIndexRange={[9, 0]} style={{ pointerEvents: 'none' }}><div className="selected-place-label" style={mapView === 'flat' ? { transform: `translateY(${place.id === origin ? 25 : -25}px)` } : undefined}><span>{place.id === origin ? 'ORIGIN' : 'CONTINUATION'}</span><strong>{place.name}</strong></div></Html>}
+    <mesh ref={dot} renderOrder={mapView === 'flat' ? 7 : 0} raycast={() => {}}>{mapView === 'flat' ? <circleGeometry args={[active ? 0.035 : selected ? 0.03 : 0.018, 24]} /> : <sphereGeometry args={[active ? 0.03 : selected ? 0.025 : 0.016, 16, 16]} />}<meshBasicMaterial color={selected || active ? '#F4FFE9' : POINT_COLOR} transparent depthWrite={false} depthTest={mapView !== 'flat'} toneMapped={false} /></mesh>
+    <mesh ref={halo} renderOrder={mapView === 'flat' ? 6 : 0} raycast={() => {}}>{mapView === 'flat' ? <ringGeometry args={[0.04, selected || active ? 0.055 : 0.045, 24]} /> : <sphereGeometry args={[selected || active ? 0.055 : 0.035, 16, 16]} />}<meshBasicMaterial color={POINT_COLOR} depthTest={mapView !== 'flat'} transparent opacity={selected || active ? 0.48 : 0.28} depthWrite={false} toneMapped={false} /></mesh>
     {tooltipPresent && <Html center position={[0, 0.28, 0]} occlude={mapView !== 'flat'} zIndexRange={[30, 20]} style={{ pointerEvents: 'none' }}><div className="coordinate-tooltip-anchor" style={mapView === 'flat' ? {transform:'translateY(-35px)'} : undefined}><LocationTooltip place={place} show={active}/></div></Html>}
     </group>
   </group>

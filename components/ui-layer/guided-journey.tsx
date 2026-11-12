@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { ArrowLeft, ArrowRight, ArrowUpRight, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, MapPin, X } from 'lucide-react'
 import { getLocation, type LocationId } from '@/lib/locations'
 import { LocationPicker } from './location-picker'
 import { greatCircleKm } from '@/lib/geo'
@@ -40,7 +40,7 @@ function JourneyPrompt({ canReveal, onHide }: { canReveal: boolean; onHide: () =
     {asking ? <>
       <h1 id="journey-question" ref={heading} tabIndex={-1}>{first ? 'Where does your story begin?' : 'Where are you now?'}</h1>
       <p className="journey-prompt-description">{first ? 'Choose the place you carry with you.' : `From ${from?.name ?? 'your beginning'}, to a new chapter.`}</p>
-      {!first && from && <p className="journey-coordinate-readout journey-first-coordinate">{coordinate(from)}</p>}
+      {!first && from && <div className="journey-selected-place"><MapPin size={17}/><div><small>YOUR BEGINNING</small><strong>{from.name}</strong><span>{from.country === from.name ? 'Country point' : from.country}</span><p className="journey-coordinate-readout">{coordinate(from)}</p></div></div>}
       {!custom && <><label className="journey-input-label" htmlFor="journey-place">{first ? 'Your first location' : 'Your second location'}</label><LocationPicker excludeId={first ? null : origin} onChoose={id => id === 'custom' ? setCustom(true) : choose(id)} /><button type="button" className="journey-text-action" onClick={() => setCustom(true)}>Or enter exact coordinates <ArrowUpRight size={12} /></button></>}
       {custom && <form className="journey-coordinate-form" onSubmit={add}>
         <label>Location name<input name="name" placeholder="Name your place" required maxLength={70} autoFocus /></label>
@@ -53,7 +53,7 @@ function JourneyPrompt({ canReveal, onHide }: { canReveal: boolean; onHide: () =
       {!first && <button type="button" className="journey-text-action" onClick={() => editJourney('origin')}><ArrowLeft size={12} /> Change your beginning</button>}
     </> : <>
       <h2 id="journey-question" ref={heading} tabIndex={-1} className="journey-statement-title">Your connected story.</h2>
-      <div className="journey-place-statements">{[from,to].filter((place):place is NonNullable<typeof from>=>Boolean(place)).map((place,index)=><article key={place.id}><h3>{index===0?'FROM':'NOW IN'} / {place.name}</h3><p className="journey-coordinate-readout">{coordinate(place)}</p></article>)}</div>
+      <div className="journey-place-statements">{[from,to].filter((place):place is NonNullable<typeof from>=>Boolean(place)).map((place,index)=><article key={place.id}><small>{index===0?'YOUR BEGINNING':'YOUR NOW'}</small><h3>{place.name}</h3><span>{place.country === place.name ? 'Country point' : place.country}</span><p className="journey-coordinate-readout">{coordinate(place)}</p></article>)}</div>
       <p className="journey-map-hint">Hover over a coordinate point to read its story.</p>
       {connected && from && to && <p className="journey-distance">{Math.round(greatCircleKm(from,to)).toLocaleString()} KM CONNECTED</p>}
       <div className="journey-actions">

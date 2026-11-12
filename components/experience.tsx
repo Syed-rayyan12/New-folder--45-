@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { Globe2, Map, RotateCcw, Plus, Minus } from 'lucide-react'
+import { Globe2, Map, RotateCcw, Plus, Minus, Maximize2, X } from 'lucide-react'
 import { useJourney } from '@/lib/store'
 import { useEnvironment } from '@/lib/use-environment'
 import { BrandIntro } from './ui-layer/brand-intro'
@@ -14,7 +14,6 @@ import { GuidedJourney } from './ui-layer/guided-journey'
 import { GarmentWorld } from './ui-layer/garment-world'
 import { GalaxyPicker } from './ui-layer/galaxy-picker'
 import { GalaxyBackdrop } from './ui-layer/galaxy-backdrop'
-import { JourneyPersistence } from './ui-layer/journey-persistence'
 import { FlatWorldMap } from './ui-layer/flat-world-map'
 
 const SceneCanvas = dynamic(() => import('./canvas/scene-canvas'), { ssr: false })
@@ -22,7 +21,11 @@ const SceneCanvas = dynamic(() => import('./canvas/scene-canvas'), { ssr: false 
 export function Experience() {
   const root=useRef<HTMLElement>(null)
   const switching=useRef(false)
+  const [expanded, setExpanded] = useState(false)
+  const expandTrigger = useRef<HTMLButtonElement>(null)
+  const expandedView = useRef<HTMLDivElement>(null)
   const [introComplete, setIntroComplete] = useState(false)
+  const [logoDocked, setLogoDocked] = useState(false)
   const [brandCanvas,setBrandCanvas]=useState<HTMLCanvasElement|null>(null)
   useEffect(()=>{const canvas=getCompletedLogoCanvas();if(canvas)setBrandCanvas(canvas)},[])
   const webgl = useEnvironment()
@@ -31,6 +34,14 @@ export function Experience() {
   const transferring = stage === 'garment'
   const revealed = stage === 'reveal' || transferring || inWorld
   const flat = mapView === 'flat' && !revealed
+  useEffect(() => { if (flat || revealed) setExpanded(false) }, [flat, revealed])
+  useEffect(() => {
+    if (!expanded) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const frame = requestAnimationFrame(() => expandedView.current?.querySelector<HTMLButtonElement>('button')?.focus())
+    return () => { cancelAnimationFrame(frame); document.body.style.overflow = previousOverflow; expandTrigger.current?.focus({ preventScroll: true }) }
+  }, [expanded])
   const switchView=async(view:'globe'|'flat')=>{
     if(view===mapView||switching.current)return
     if(reducedMotion){setMapView(view);return}
@@ -72,21 +83,34 @@ export function Experience() {
     return () => window.clearTimeout(timer)
   }, [stage, reducedMotion, setStage])
   return <main ref={root} className={`cosmic-experience guided-experience${!revealed ? ' is-map-stage' : ''}${flat?' is-flat-layout':''}${inWorld||transferring?' is-garment-world':''}`} data-lighting="night">
-    <JourneyPersistence/>
-    <BrandIntro ready={ready} complete={introComplete} onTextureReady={setBrandCanvas} onComplete={()=>{setMapView('globe');setIntroComplete(true)}}/>
+    <BrandIntro ready={ready} complete={introComplete} onTextureReady={setBrandCanvas} onComplete={()=>{setMapView('globe');setIntroComplete(true);setLogoDocked(true)}}/>
     {webgl!==null&&<GalaxyBackdrop/>}
-    <div className={`cosmic-canvas globe-scene${flat?' is-inactive':''}`} inert={!introComplete||flat} aria-hidden={flat}>{webgl&&<SceneCanvas active={!flat} showBrand={!revealed} brandCanvas={brandCanvas} brandVisible={introComplete}/>}</div>
+    <div ref={expandedView} className={`globe-view-container${expanded ? ' is-expanded' : ''}`} role={expanded ? 'dialog' : undefined} aria-modal={expanded ? true : undefined} aria-label={expanded ? 'Expanded globe explorer' : undefined} onKeyDown={event => {
+      if (!expanded) return
+      if (event.key === 'Escape') { event.preventDefault(); setExpanded(false) }
+      if (event.key === 'Tab') {
+        const buttons = Array.from(expandedView.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? [])
+        const first = buttons[0], last = buttons[buttons.length - 1]
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus() }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus() }
+      }
+    }}>
+      {expanded && <button type="button" className="expanded-globe-close" onClick={() => setExpanded(false)} aria-label="Close expanded globe"><X size={19}/></button>}
+      {expanded && <div className="expanded-globe-zoom-controls" role="group" aria-label="Expanded globe zoom"><button type="button" aria-label="Zoom in expanded globe" title="Zoom in" onClick={() => zoomMap('in')}><Plus size={19}/></button><button type="button" aria-label="Zoom out expanded globe" title="Zoom out" onClick={() => zoomMap('out')}><Minus size={19}/></button></div>}
+      <div className={`cosmic-canvas globe-scene${flat?' is-inactive':''}`} inert={!introComplete||flat} aria-hidden={flat}>{webgl&&<SceneCanvas expanded={expanded} active={!flat} showBrand={!revealed} brandCanvas={brandCanvas} brandVisible={introComplete}/>}</div>
+    </div>
     {flat&&<div className="cosmic-canvas flat-scene" inert={!introComplete}><section className="flat-map-viewport" aria-label="Flat world map"><FlatWorldMap/></section></div>}
     {!inWorld&&!transferring&&<div className="space-vignette"/>}
-    <ClientDialogs enabled={introComplete}/>
-    {introComplete&&<MusicToggle/>}
-    <div className={`experience-content${introComplete ? ' is-entered' : ''}${inWorld || transferring ? ' is-garment-world' : ''}`} inert={!introComplete} aria-hidden={!introComplete}>
+    <ClientDialogs enabled={introComplete && !expanded}/>
+    <MusicToggle enabled={logoDocked}/>
+    <div className={`experience-content${introComplete ? ' is-entered' : ''}${inWorld || transferring ? ' is-garment-world' : ''}`} inert={!introComplete || expanded} aria-hidden={!introComplete || expanded}>
       {!revealed && <>
 
         {introComplete && <GuidedJourney canReveal={Boolean(webgl && ready)} />}
         <div className="map-top-controls">{webgl&&<div className="map-view-toggle" role="group" aria-label="Switch between globe and flat map"><button type="button" aria-label="Original globe" title="Original globe" aria-pressed={mapView === 'globe'} onClick={()=>void switchView('globe')}><Globe2 size={14} /><span>Original Globe</span></button><button type="button" aria-label="Flat world map" title="Flat world map" aria-pressed={mapView === 'flat'} onClick={()=>void switchView('flat')}><Map size={14} /><span>Flat Map</span></button></div>}
         <div className="map-secondary-controls">
         {webgl&&<div className="map-zoom-controls" role="group" aria-label="Map zoom and reset controls"><button type="button" aria-label="Zoom in" title="Zoom in" onClick={()=>zoomMap('in')}><Plus size={16}/></button><button type="button" aria-label="Zoom out" title="Zoom out" onClick={()=>zoomMap('out')}><Minus size={16}/></button><button type="button" aria-label="Reset map view" title="Reset map view" onClick={()=>zoomMap('reset')}><RotateCcw size={14}/></button></div>}
+        {!flat && webgl && <button ref={expandTrigger} type="button" className="globe-expand-button" onClick={() => setExpanded(true)} aria-haspopup="dialog"><Maximize2 size={15}/><span>Expand globe</span></button>}
         <GalaxyPicker/></div></div>
       </>}
       {(inWorld || transferring) && <GarmentWorld />}

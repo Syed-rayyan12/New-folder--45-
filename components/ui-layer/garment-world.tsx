@@ -9,7 +9,7 @@ import { MockupCarousel } from './mockup-carousel'
 
 export function GarmentWorld() {
   const {origin,destination,emblemSeed,setStage}=useJourney()
-  const [assets,setAssets]=useState<MockupAsset[]>(DEFAULT_MOCKUPS)
+  const assets: MockupAsset[] = DEFAULT_MOCKUPS
   const selected=useJourney(s=>s.mockupId)
   const setSelected=useJourney(s=>s.setMockup)
   const color=useJourney(s=>s.mockupColor)
@@ -29,8 +29,6 @@ export function GarmentWorld() {
   const [replay,setReplay]=useState(0)
   const [open,setOpen]=useState(false)
   const dialog=useRef<HTMLDialogElement>(null)
-  const load=async()=>{try{const response=await fetch('/api/mockups',{cache:'no-store'});if(response.ok){const data=await response.json();if(Array.isArray(data.mockups)&&data.mockups.length)setAssets(data.mockups)}}catch{}}
-  useEffect(()=>{void load()},[])
   useEffect(()=>{if(open)dialog.current?.showModal()},[open])
   const asset=assets.find(item=>item.id===selected)||assets[0]
   if(!origin||!destination)return null

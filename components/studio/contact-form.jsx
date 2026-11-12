@@ -17,13 +17,7 @@ export function ContactForm() {
     const payload=Object.fromEntries(data.entries());payload.consent=data.get('consent')==='on'
     const parsed=contactSchema.safeParse(payload)
     if(!parsed.success){setErrors(parsed.error.flatten().fieldErrors);setMessage('Please check the highlighted fields.');setStatus('error');const key=parsed.error.issues[0]?.path[0];formRef.current?.elements.namedItem(key)?.focus();return}
-    pending.current=true;setStatus('sending');setErrors({});setMessage('')
-    try {
-      const response=await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(parsed.data)})
-      const result=await response.json()
-      if(!response.ok){setErrors(result.fields||{});throw new Error(result.error||'Something went wrong. Please try again.')}
-      setStatus('success');setMessage('Your enquiry is on its way. We look forward to hearing more about your project.');formRef.current?.reset()
-    } catch(error){setStatus('error');setMessage(error.message||'Could not connect. Please try again.')} finally{pending.current=false}
+    setErrors({});setStatus('error');setMessage('Contact submission is unavailable in this frontend preview. Your message has not been sent.')
   }
   const fieldError=name=>errors[name]&&<span id={`${name}-error`} className="field-error">{errors[name][0]}</span>
   const props=name=>({'aria-invalid':!!errors[name],'aria-describedby':errors[name]?`${name}-error`:undefined})

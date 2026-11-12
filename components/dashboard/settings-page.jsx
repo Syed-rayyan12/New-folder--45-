@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Save, ShieldCheck, Trash2, X } from 'lucide-react'
-import { api } from '@/lib/backend-api'
 import styles from './settings-page.module.css'
 
 const EMPTY_PROFILE = { accountEmail:'', email:'', phone:'', language:'' }
@@ -23,23 +22,18 @@ export function SettingsPage() {
   const [feedback,setFeedback] = useState('')
   const [passwordFeedback,setPasswordFeedback] = useState('')
   const [notice,setNotice] = useState(null)
-  useEffect(() => {api('/dashboard/settings').then(data=>setProfile(data.profile)).catch(error=>setFeedback(error.message))}, [])
+  useEffect(() => {try { const stored=localStorage.getItem('prvlg-preview-settings');if(stored)setProfile({...EMPTY_PROFILE,...JSON.parse(stored)}) } catch {}}, [])
   const change = event => { setProfile(current => ({...current,[event.target.name]:event.target.value}));setSaved(false);setFeedback('') }
   const save = async event => {
     event.preventDefault()
-    try {await api('/dashboard/settings',{method:'PUT',body:JSON.stringify(profile)});setSaved(true);setFeedback('Changes saved.')}catch(error){setSaved(false);setFeedback(error.message)}
+    try {localStorage.setItem('prvlg-preview-settings',JSON.stringify(profile));setSaved(true);setFeedback('Saved in this browser only.')}catch(error){setSaved(false);setFeedback(error.message)}
   }
   const password = async event => {
     event.preventDefault()
-    const form = event.currentTarget
-    const data = new FormData(form)
-    const next = String(data.get('newPassword') || '')
-    if (next.length < 12 || !/\d/.test(next) || !/[^A-Za-z0-9\s]/.test(next)) { setPasswordFeedback('Use at least 12 characters with a number and symbol.');return }
-    if (next !== data.get('confirmPassword')) { setPasswordFeedback('The new passwords do not match.');return }
-    try{await api('/dashboard/password',{method:'PUT',body:JSON.stringify({currentPassword:data.get('currentPassword'),newPassword:next})});form.reset();setPasswordFeedback('Password updated. Other sessions have been signed out.')}catch(error){setPasswordFeedback(error.message)}
+    setPasswordFeedback('Password changes are unavailable in this frontend preview.')
   }
   return <div className={styles.page}>
-    <header className={styles.pageHead}><div><h1>ACCOUNT SETTINGS</h1><p>Account, Security And Privacy Controls For Your Platform.</p></div><button type="submit" form="settings-profile" className={styles.saveButton}><Save size={13}/>{saved ? 'Changes Saved' : 'Save Changes'}</button></header>
+    <header className={styles.pageHead}><div><h1>ACCOUNT SETTINGS</h1><p>Frontend preview. Profile preferences are stored in this browser only.</p></div><button type="submit" form="settings-profile" className={styles.saveButton}><Save size={13}/>{saved ? 'Changes Saved' : 'Save Changes'}</button></header>
     <div className={styles.body}>
       <div className={styles.formGrid}>
         <section className={styles.card} aria-labelledby="account-settings-heading"><header><h2 id="account-settings-heading">ACCOUNT SETTINGS</h2></header><form id="settings-profile" onSubmit={save} className={styles.form}>

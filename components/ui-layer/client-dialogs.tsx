@@ -1,7 +1,6 @@
 ﻿'use client'
 
 import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react'
-import { submitJourneyProfile } from '@/lib/journey-api'
 import { useJourney } from '@/lib/store'
 import { getClientLocation, getClientLocationName } from '@/lib/client-location'
 import { clientProfileSchema,wishlistLocationValue, type ClientProfile } from '@/lib/client-profile'
@@ -36,11 +35,11 @@ export function ClientDialogs({enabled}:{enabled:boolean}){
     try{const coordinates=await getClientLocation(navigator.geolocation,window.isSecureContext,()=>{if(request===locationRequest.current)setLocationStatus('Trying again...')});if(request!==locationRequest.current)return;setClientLocation(coordinates);setLocationStatus('Finding your city...');const name=await getClientLocationName(coordinates);if(request!==locationRequest.current)return;setClientLocation({...coordinates,name});setLocationAsked(true)}catch(error){if(request===locationRequest.current)setLocationError(error instanceof Error?error.message:'Location detection failed. Please try again.')}finally{if(request===locationRequest.current)setLocating(false)}
   }
   const submit=async(event:FormEvent<HTMLFormElement>)=>{
-    event.preventDefault();if(saving)return;const form=event.currentTarget;const consent=new FormData(form).get('consent')==='on';const result=clientProfileSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)))
+    event.preventDefault();if(saving)return;const form=event.currentTarget;const result=clientProfileSchema.safeParse(Object.fromEntries(new FormData(event.currentTarget)))
     if(!result.success){const next:typeof errors={};for(const issue of result.error.issues){const field=issue.path[0] as keyof ClientProfile;if(!next[field])next[field]=issue.message}setErrors(next);const first=event.currentTarget.elements.namedItem(String(result.error.issues[0]?.path[0]));if(first instanceof HTMLInputElement)first.focus();return}
     const source=clientLocation&&result.data.location===wishlistLocationValue(clientLocation)?'geolocation':'manual'
     setErrors({});setSaving(true);setSaveError('')
-    try{await submitJourneyProfile(result.data,source,consent);saveClientProfile(result.data,source)}catch(error){setSaveError(error instanceof Error?error.message:'Your details could not be saved. Please try again.')}finally{setSaving(false)}
+    try{saveClientProfile(result.data,source)}catch(error){setSaveError(error instanceof Error?error.message:'Your details could not be saved. Please try again.')}finally{setSaving(false)}
   }
   const location=wishlistLocationValue(clientLocation,profileLocationSource==='manual'?clientProfile?.location||'':'')
   const field=(name:keyof ClientProfile,label:string,type='text',autoComplete?:string,placeholder?:string)=><label className="client-form-field">{label}<input name={name} type={type} autoComplete={autoComplete} placeholder={placeholder} defaultValue={name==='location'?location:clientProfile?.[name]||''} required maxLength={name==='email'?254:name==='phone'?30:name==='location'?180:100} aria-invalid={Boolean(errors[name])} aria-describedby={errors[name]?`client-error-${name}`:undefined}/>{errors[name]&&<span id={`client-error-${name}`} className="client-field-error" role="alert">{errors[name]}</span>}</label>
@@ -64,7 +63,7 @@ export function ClientDialogs({enabled}:{enabled:boolean}){
         {field('email','Email address','email','email','you@example.com')}
         {field('phone','Phone number','tel','tel','+ Country code and number')}
         {field('location','Your current location','text','address-level2','City, country or coordinates')}
-        <label className="client-consent"><input type="checkbox" name="consent"/>Keep me updated about PRVLG releases by email (optional).</label>
+        <p className="client-consent">Your details stay in this browser session. No information is sent to a server.</p>
         {saveError&&<p className="client-field-error" role="alert">{saveError}</p>}
         <button type="submit" className="client-primary" disabled={saving}><span>{saving?'Saving your details...':'Continue to my emblem'}</span><DialogIcon name="arrow"/></button>
       </form>}

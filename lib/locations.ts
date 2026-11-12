@@ -1,4 +1,5 @@
 export type LocationId =
+  | `place:${string}`
   | `custom:${string}`
   | 'georgetown'
   | 'kingston'
@@ -121,6 +122,12 @@ export const LOCATIONS: readonly Location[] = [
 const BY_ID = new Map(LOCATIONS.map((location) => [location.id, location]))
 
 export function getLocation(id: LocationId): Location {
+  if (id.startsWith('place:')) {
+    const [,lat,lng,name,country,code] = id.split(':')
+    const latitude = Number(lat), longitude = Number(lng)
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180 || !name || !country) throw new Error('Invalid place')
+    return { id, lat: latitude, lng: longitude, name: decodeURIComponent(name), country: decodeURIComponent(country), code: code || 'YOU', statement: 'A place in your story.' }
+  }
   if (id.startsWith('custom:')) {
     const [lat, lng, ...name] = id.slice(7).split(':')
     const latitude = Number(lat)

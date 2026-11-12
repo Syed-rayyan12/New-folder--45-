@@ -11,7 +11,7 @@ const NAV = ['Overview', 'Corridors', 'Audience', 'Campaign', 'Collection', 'Jou
 export function MainDashboard(props) { return <DashboardData><DashboardContent {...props}/></DashboardData> }
 
 function DashboardContent({ children, activePage = 'Overview' }) {
-  const {overview,logout}=useDashboard()
+  const {overview}=useDashboard()
   const ORIGINS=overview.origins.map(([name,count])=>[name.toUpperCase(),count])
   const CORRIDORS=overview.corridors.map(row=>({id:row.id,label:`${row.from} → ${row.to}`,countries:`${row.origin} → ${row.country}`,audience:row.audience,growth:`${row.growth.toFixed(1)}%`,path:`M${row.point.join(' ')} Q${row.bend.join(' ')} ${row.target.join(' ')}`,from:row.point,to:row.target,labelAt:null}))
   const SIGNALS=overview.signals.map(row=>[`${row.title} — ${row.description}`,new Date(row.created_at).toLocaleString()])
@@ -40,7 +40,7 @@ function DashboardContent({ children, activePage = 'Overview' }) {
         <label className={styles.search}><Search size={14} aria-hidden="true" /><input aria-label="Search dashboard" placeholder="SEARCH" value={query} onChange={e => setQuery(e.target.value)} />{query && <button type="button" aria-label="Clear search" onClick={() => setQuery('')}><X size={13} /></button>}</label>
         <div className={styles.account}>
           <button type="button" aria-expanded={menu} onClick={() => setMenu(!menu)}>CURATOR <ChevronDown size={13} /></button>
-          {menu && <div className={styles.accountMenu}><strong>Main Dashboard</strong><span>Live PostgreSQL data</span><a href="/">Open the origin experience ↗</a><button type="button" onClick={() => { router.push('/main-dashboard/settings'); setMenu(false) }}>Dashboard settings</button><button type="button" onClick={logout}>Sign out</button></div>}
+          {menu && <div className={styles.accountMenu}><strong>Main Dashboard</strong><span>Frontend preview</span><a href="/">Open the origin experience ↗</a><button type="button" onClick={() => { router.push('/main-dashboard/settings'); setMenu(false) }}>Dashboard settings</button></div>}
         </div>
       </div>
     </header>

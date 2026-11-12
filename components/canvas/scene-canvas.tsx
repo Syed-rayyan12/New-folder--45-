@@ -23,7 +23,7 @@ function Ready() {
   return null
 }
 
-export default function SceneCanvas({active=true,showBrand=false,brandCanvas,brandVisible=true,onBrandTarget}:{active?:boolean;showBrand?:boolean;brandCanvas?:HTMLCanvasElement|null;brandVisible?:boolean;onBrandTarget?:(target:GlobeBrandTarget)=>void}) {
+export default function SceneCanvas({expanded=false,active=true,showBrand=false,brandCanvas,brandVisible=true,onBrandTarget}:{expanded?:boolean;active?:boolean;showBrand?:boolean;brandCanvas?:HTMLCanvasElement|null;brandVisible?:boolean;onBrandTarget?:(target:GlobeBrandTarget)=>void}) {
   const reducedMotion = useJourney((s) => s.reducedMotion)
   const isMobile = useJourney((s) => s.isMobile)
   const stage = useJourney((s) => s.stage)
@@ -41,7 +41,7 @@ export default function SceneCanvas({active=true,showBrand=false,brandCanvas,bra
         <CosmicWorld showBrand={showBrand} brandCanvas={brandCanvas} brandVisible={brandVisible} onBrandTarget={onBrandTarget}/>
         <Ready />
       </Suspense>
-      <JourneyControls />
+      <JourneyControls expanded={expanded} />
       {showBloom && <EffectComposer multisampling={0}><Bloom mipmapBlur intensity={0.65} luminanceThreshold={1} luminanceSmoothing={0.4} /></EffectComposer>}
     </Canvas>
   )
