@@ -3,7 +3,7 @@
 import { useTexture } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { AdditiveBlending, BufferAttribute, BufferGeometry, CatmullRomCurve3, DoubleSide, Mesh, MeshBasicMaterial, Quaternion, TubeGeometry, Vector3 } from 'three'
+import { AdditiveBlending, BufferAttribute, BufferGeometry, CatmullRomCurve3, Mesh, MeshBasicMaterial, Quaternion, TubeGeometry, Vector3 } from 'three'
 import type { Location } from '@/lib/locations'
 import { mapPosition, routeSegments } from '@/lib/geo'
 import { POINT_COLOR, CONNECTION_COLOR } from '@/lib/palette'
@@ -15,7 +15,7 @@ export function TechPlaceEffect({ place, selected }: { place: Location; selected
   const reduced = useJourney(s=>s.reducedMotion)
   const wave=useRef<Mesh>(null),waveMaterial=useRef<MeshBasicMaterial>(null)
   const elapsed=useRef((Math.abs(place.lat)+Math.abs(place.lng))%1)
-  const [aperture,pillar]=useTexture(['/vendor/ghostcat-earth/aperture.png','/vendor/ghostcat-earth/light_column.png'])
+  const aperture=useTexture('/vendor/ghostcat-earth/aperture.png')
   const rotation=useMemo(()=>mapView === 'flat' ? new Quaternion() : new Quaternion().setFromUnitVectors(new Vector3(0,0,1),mapPosition(place.lat,place.lng,1,mapView)),[place.lat,place.lng,mapView])
   useFrame((_,delta)=>{
     if(!reduced)elapsed.current+=Math.min(delta,.05)*.38
@@ -27,7 +27,6 @@ export function TechPlaceEffect({ place, selected }: { place: Location; selected
     <group position={mapPosition(place.lat,place.lng,2.012,mapView)} quaternion={rotation} raycast={()=>{}}>
       <mesh scale={.12}><planeGeometry args={[1,1]}/><meshBasicMaterial map={aperture} color={POINT_COLOR} transparent depthWrite={false} blending={AdditiveBlending}/></mesh>
       <mesh ref={wave} scale={.12}><planeGeometry args={[1,1]}/><meshBasicMaterial ref={waveMaterial} map={aperture} color={POINT_COLOR} transparent depthWrite={false} blending={AdditiveBlending}/></mesh>
-      {mapView !== 'flat' && [0,Math.PI/2].map(angle=><group key={angle} rotation={[0,0,angle]}><mesh position={[0,0,.22]} rotation={[Math.PI/2,0,0]}><planeGeometry args={[.045,.44]}/><meshBasicMaterial map={pillar} color={POINT_COLOR} transparent opacity={selected?.85:.55} depthWrite={false} side={DoubleSide} blending={AdditiveBlending}/></mesh></group>)}
     </group>
   </>
 }

@@ -97,7 +97,7 @@ export function Experience() {
     }}>
       {expanded && <button type="button" className="expanded-globe-close" onClick={() => setExpanded(false)} aria-label="Close expanded globe"><X size={19}/></button>}
       {expanded && <div className="expanded-globe-zoom-controls" role="group" aria-label="Expanded globe zoom"><button type="button" aria-label="Zoom in expanded globe" title="Zoom in" onClick={() => zoomMap('in')}><Plus size={19}/></button><button type="button" aria-label="Zoom out expanded globe" title="Zoom out" onClick={() => zoomMap('out')}><Minus size={19}/></button></div>}
-      <div className={`cosmic-canvas globe-scene${flat?' is-inactive':''}`} inert={!introComplete||flat} aria-hidden={flat}>{webgl&&<SceneCanvas expanded={expanded} active={!flat} showBrand={!revealed && !expanded} brandCanvas={brandCanvas} brandVisible={introComplete}/>}</div>
+      <div className={`cosmic-canvas globe-scene${flat?' is-inactive':''}`} inert={!introComplete||flat} aria-hidden={flat}>{webgl&&<SceneCanvas expanded={expanded} active={!flat} showBrand={!revealed} brandCanvas={brandCanvas} brandVisible={introComplete}/>}</div>
     </div>
     {flat&&<div className="cosmic-canvas flat-scene" inert={!introComplete}><section className="flat-map-viewport" aria-label="Flat world map"><FlatWorldMap/></section></div>}
     {!inWorld&&!transferring&&<div className="space-vignette"/>}

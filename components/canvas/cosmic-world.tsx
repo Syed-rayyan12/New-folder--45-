@@ -10,7 +10,7 @@ import { getLocation, LOCATIONS, type Location } from '@/lib/locations'
 import { useJourney } from '@/lib/store'
 import { POINT_COLOR } from '@/lib/palette'
 import { journeyOrientation } from '@/lib/globe-focus'
-import { GLOBE_BRAND_ANCHOR } from '@/lib/globe-brand-pose'
+import { GLOBE_BRAND_ANCHOR, createGlobeBrandSurface } from '@/lib/globe-brand-pose'
 import { Earth } from './earth'
 import { GlobeBrand, type GlobeBrandTarget } from './globe-brand'
 import { AnimatedRoute } from './animated-route'
@@ -71,6 +71,8 @@ export function CosmicWorld({showBrand=false,brandCanvas,brandVisible=true,onBra
   const gl = useThree((s) => s.gl)
   const reducedMotion = useJourney((s) => s.reducedMotion)
   const globe = useRef<Group>(null)
+  const brandSurface = useRef<Group>(null)
+  const brandBasisInverse = useMemo(() => createGlobeBrandSurface(camera.position, camera.quaternion, new Quaternion()).rotation.clone().invert(), [camera])
   const fromRotation = useRef(journeyOrientation(GLOBE_BRAND_ANCHOR,null,camera.position))
   const targetRotation = useRef(fromRotation.current.clone())
   const transition = useRef(1)
@@ -99,6 +101,8 @@ export function CosmicWorld({showBrand=false,brandCanvas,brandVisible=true,onBra
     return () => gl.domElement.removeEventListener('pointerdown', stop)
   }, [gl])
   useFrame((_, delta) => {
+    // Keep the curved artwork facing the viewer as geography turns beneath it.
+    brandSurface.current?.quaternion.copy(camera.quaternion).multiply(brandBasisInverse)
     if (!globe.current || transition.current >= 1) return
     transition.current = Math.min(1, transition.current + Math.min(delta, 0.1) / 2.2)
     const t = transition.current
@@ -116,10 +120,10 @@ export function CosmicWorld({showBrand=false,brandCanvas,brandVisible=true,onBra
   return <>
     {!revealed ? <group ref={globe} quaternion={mapView === 'flat' ? new Quaternion() : fromRotation.current}>
       <Earth />
-      {showBrand&&mapView==='globe'&&<GlobeBrand orientation={fromRotation.current} canvas={brandCanvas} visible={brandVisible} onTarget={onBrandTarget}/>}
       {journeyStep === 'connected' && personal.map((points, i) => <AnimatedRoute key={`${origin}-${destination}-${mapView}-${i}`} points={points} />)}
       {places.map((p) => <PlaceMarker key={p.id} place={p} selected={origin === p.id || destination === p.id} />)}
     </group> : null}
+    {!revealed && showBrand && mapView === 'globe' && <group ref={brandSurface}><GlobeBrand orientation={fromRotation.current} canvas={brandCanvas} visible={brandVisible} onTarget={onBrandTarget}/></group>}
     {stage==='reveal' && <AssemblingEmblem key={seed} seed={seed} />}
   </>
 }

@@ -59,15 +59,19 @@ export function LocationPicker({ excludeId, onChoose }: { excludeId: LocationId 
     const align = () => {
       const rect = trigger.current?.getBoundingClientRect(); if (!rect) return
       const width = Math.min(Math.max(rect.width, 360), window.innerWidth - 24)
-      const below = window.innerHeight - rect.bottom - 20, above = rect.top - 20
+      const viewport = window.visualViewport
+      const visibleTop = viewport?.offsetTop ?? 0
+      const visibleHeight = viewport?.height ?? window.innerHeight
+      const visibleBottom = visibleTop + visibleHeight
+      const below = visibleBottom - rect.bottom - 20, above = rect.top - visibleTop - 20
       const upwards = below < 290 && above > below
       const available = upwards ? above : below
-      const height = Math.min(520, available < 380 ? window.innerHeight - 24 : available)
-      setPosition({ left: Math.max(12, Math.min(rect.left, window.innerWidth - width - 12)), top: available < 380 ? Math.max(12, (window.innerHeight - height) / 2) : upwards ? rect.top - height - 8 : rect.bottom + 8, width, height })
+      const height = Math.min(520, available < 380 ? visibleHeight - 24 : available)
+      setPosition({ left: Math.max(12, Math.min(rect.left, window.innerWidth - width - 12)), top: available < 380 ? Math.max(visibleTop + 12, visibleTop + (visibleHeight - height) / 2) : upwards ? rect.top - height - 8 : rect.bottom + 8, width, height })
     }
     align(); input.current?.focus({ preventScroll: true })
-    window.addEventListener('resize', align); window.addEventListener('scroll', align, true)
-    return () => { window.removeEventListener('resize', align); window.removeEventListener('scroll', align, true) }
+    window.addEventListener('resize', align); window.addEventListener('scroll', align, true); window.visualViewport?.addEventListener('resize', align); window.visualViewport?.addEventListener('scroll', align)
+    return () => { window.removeEventListener('resize', align); window.removeEventListener('scroll', align, true); window.visualViewport?.removeEventListener('resize', align); window.visualViewport?.removeEventListener('scroll', align) }
   }, [open])
   useEffect(() => {
     if (!open) return

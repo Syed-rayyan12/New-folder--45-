@@ -22,8 +22,8 @@ export function JourneyControls({ expanded = false }: { expanded?: boolean }) {
   // Fit the sphere's silhouette along the narrower viewport dimension.
   const verticalFov = camera instanceof PerspectiveCamera ? camera.fov * Math.PI / 180 : Math.PI / 4
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * size.width / Math.max(1, size.height))
-  const globeFitDistance = GLOBE_RADIUS * 1.12 / Math.sin(Math.min(verticalFov, horizontalFov) / 2)
-  const globeMinDistance = expanded ? GLOBE_RADIUS + 0.24 : globeFitDistance
+  const globeFitDistance = GLOBE_RADIUS * (expanded ? 1.015 : 1.06) / Math.sin(Math.min(verticalFov, horizontalFov) / 2)
+  const globeMinDistance = globeFitDistance
   const controls = useRef<ComponentRef<typeof OrbitControls>>(null)
   const flight = useRef({ from: new Vector3(), to: new Vector3(), progress: 1 })
   const fitDistance = () => {

@@ -31,7 +31,7 @@ const brandFragment=`
   }
 `
 
-/** A curved decal, parented to the Earth, with no camera-following transform. */
+/** Curved artwork on the globe surface; its parent keeps it stable as locations rotate. */
 export function GlobeBrand({orientation,canvas,visible=true,onTarget}:{orientation:Quaternion;canvas?:HTMLCanvasElement|null;visible?:boolean;onTarget?:(target:GlobeBrandTarget)=>void}){
   const camera=useThree(state=>state.camera),gl=useThree(state=>state.gl)
   const material=useRef<ShaderMaterial>(null)
