@@ -1,10 +1,9 @@
 ﻿'use client'
 
-import { useFrame,useThree } from '@react-three/fiber'
+import { useFrame,useLoader,useThree } from '@react-three/fiber'
 import { useEffect,useMemo,useRef } from 'react'
-import { AdditiveBlending,CanvasTexture,Color,Euler,MathUtils,Mesh,MeshBasicMaterial,Quaternion,ShaderMaterial,SphereGeometry,SRGBColorSpace } from 'three'
+import { AdditiveBlending,Color,Euler,MathUtils,Mesh,MeshBasicMaterial,Quaternion,ShaderMaterial,SphereGeometry,TextureLoader } from 'three'
 import { DecalGeometry } from 'three/examples/jsm/geometries/DecalGeometry.js'
-import { BRAND_LOGO_PATHS } from '@/lib/brand-logo'
 import { createGlobeBrandSurface } from '@/lib/globe-brand-pose'
 
 export type GlobeBrandTarget={x:number;y:number;width:number}
@@ -44,23 +43,11 @@ export function GlobeBrand({orientation,canvas,visible=true,onTarget}:{orientati
     sphere.geometry.dispose();sphere.material.dispose()
     return geometry
   },[pose])
-  const texture=useMemo(()=>{
-    // The intro retains its particles; the globe uses the complete, clean artwork.
-    const surface=document.createElement('canvas')
-    surface.width=990;surface.height=582
-    const context=surface.getContext('2d')
-    if(!context)return null
-    context.scale(3,3)
-    context.fillStyle='#ffffff'
-    for(const path of BRAND_LOGO_PATHS)context.fill(new Path2D(path),'evenodd')
-    const texture=new CanvasTexture(surface)
-    texture.colorSpace=SRGBColorSpace;texture.needsUpdate=true
-    return texture
-  },[])
+  // Cropped alpha mask from monogram.png; the shader preserves the lime ink.
+  const texture=useLoader(TextureLoader,'/images/monogram-globe.png')
   // This custom shader writes display color directly, like the Earth's shader.
   const uniforms=useMemo(()=>({artwork:{value:texture},inkColor:{value:new Color(GLOBE_LOGO_COLOR).convertLinearToSRGB()},inkOpacity:{value:0}}),[texture])
   useEffect(()=>()=>geometry.dispose(),[geometry])
-  useEffect(()=>()=>texture?.dispose(),[texture])
   useFrame((_,delta)=>{
     if(material.current){const opacity=material.current.uniforms.inkOpacity;opacity.value=MathUtils.damp(opacity.value,(visible&&texture) ? GLOBE_LOGO_OPACITY : 0,4,Math.min(delta,.1))}
     if(!onTarget||!mesh.current)return
