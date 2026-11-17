@@ -2,7 +2,7 @@
 
 import { useFrame, useLoader, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { AdditiveBlending, Box3, CanvasTexture, Color, DoubleSide, Euler, FileLoader, LinearFilter, LinearMipmapLinearFilter, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Plane, Raycaster, SRGBColorSpace, Vector3 } from 'three'
+import { AdditiveBlending, Box3, CanvasTexture, Color, DoubleSide, Euler, FileLoader, LinearFilter, LinearMipmapLinearFilter, MathUtils, Matrix4, Mesh, MeshBasicMaterial, MeshStandardMaterial, Plane, Raycaster, SRGBColorSpace, TextureLoader, Vector3 } from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js'
 import { DecalGeometry } from 'three/examples/jsm/geometries/DecalGeometry.js'
@@ -12,13 +12,19 @@ import { GLOBE_COLOR } from '@/lib/palette'
 import { useJourney } from '@/lib/store'
 import type { MockupAsset } from '@/lib/mockups'
 
-function printTexture(seed:number,ink:string,back=false,glow=false,resolution=4096,anisotropy=1) {
+function printTexture(seed:number,ink:string,back=false,glow=false,resolution=4096,anisotropy=1,monogram?:CanvasImageSource) {
   const canvas=document.createElement('canvas')
-  canvas.width=resolution;canvas.height=back?Math.round(resolution*194/330):resolution
+  canvas.width=resolution;canvas.height=back?Math.round(resolution*(monogram?1166/1046:194/330)):resolution
   const context=canvas.getContext('2d')!
   if(back){
-    context.scale(canvas.width/330,canvas.height/194);context.fillStyle=ink
-    for(const path of BRAND_LOGO_PATHS)context.fill(new Path2D(path),'evenodd')
+    if(monogram){
+      context.drawImage(monogram,0,0,canvas.width,canvas.height)
+      context.globalCompositeOperation='source-in';context.fillStyle=ink
+      context.fillRect(0,0,canvas.width,canvas.height)
+    }else{
+      context.scale(canvas.width/330,canvas.height/194);context.fillStyle=ink
+      for(const path of BRAND_LOGO_PATHS)context.fill(new Path2D(path),'evenodd')
+    }
   }else{
     const emblem=buildSacredEmblem(seed)
     const radius=Math.max(...emblem.strokes.flatMap(stroke=>stroke.points.map(p=>Math.hypot(p.x,p.y))))
@@ -45,7 +51,7 @@ function printTexture(seed:number,ink:string,back=false,glow=false,resolution=40
   return texture
 }
 
-function surfacePrint(meshes:Mesh[],back=false) {
+function surfacePrint(meshes:Mesh[],back=false,monogram=false) {
   const ray=new Raycaster(new Vector3(back?0:.28,back?.38:.42,back?-3:3),new Vector3(0,0,back?1:-1))
   const hit=ray.intersectObjects(meshes,false)[0]
   if(!hit?.face)return null
@@ -55,7 +61,7 @@ function surfacePrint(meshes:Mesh[],back=false) {
   const right=new Vector3().crossVectors(new Vector3(0,1,0),normal).normalize()
   const up=new Vector3().crossVectors(normal,right).normalize()
   const rotation=new Euler().setFromRotationMatrix(new Matrix4().makeBasis(right,up,normal))
-  return new DecalGeometry(hit.object as Mesh,hit.point,rotation,new Vector3(back?1:.44,back?.588:.44,.18))
+  return new DecalGeometry(hit.object as Mesh,hit.point,rotation,new Vector3(back?(monogram?.65:1):.44,back?(monogram?.65*1166/1046:.588):.44,.18))
 }
 
 /** The supplied OBJ geometry, normalized without changing the source asset. */
@@ -64,6 +70,8 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   const materialText=useLoader(FileLoader,asset.materialSrc!)
   const reduced=useJourney(s=>s.reducedMotion)
   const monogramColor=useJourney(s=>s.monogramColor)
+  const backDesign=useJourney(s=>s.backDesign)
+  const monogramArtwork=useLoader(TextureLoader,'/images/monogram-globe.png')
   const glowMaterial=useRef<MeshBasicMaterial>(null)
   const coreMaterial=useRef<MeshBasicMaterial>(null)
   const pulseTime=useRef(0)
@@ -93,13 +101,14 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
       if(object instanceof Mesh){object.geometry=object.geometry.clone();object.material=material;object.castShadow=true;object.receiveShadow=true;meshes.push(object)}
     })
     group.updateMatrixWorld(true)
-    return {group,meshes,material,size:size.multiplyScalar(scale),front:surfacePrint(meshes),back:surfacePrint(meshes,true)}
+    return {group,meshes,material,size:size.multiplyScalar(scale),front:surfacePrint(meshes),back:surfacePrint(meshes,true),backMonogram:surfacePrint(meshes,true,true)}
   },[source,materialText,clip])
   const shade=color==='original'?GLOBE_COLOR:color
   const ink=useMemo(()=>{const c=new Color(shade);return c.r*.2126+c.g*.7152+c.b*.0722>.4?'#142417':'#f2f0e8'},[shade])
   const front=useMemo(()=>printTexture(seed,'#ffffff',false,false,printResolution,anisotropy),[seed,printResolution,anisotropy])
   const glow=useMemo(()=>printTexture(seed,'#ffffff',false,true,Math.min(2048,printResolution),anisotropy),[seed,printResolution,anisotropy])
-  const back=useMemo(()=>printTexture(seed,ink,true,false,Math.min(2048,printResolution),anisotropy),[seed,ink,printResolution,anisotropy])
+  const back=useMemo(()=>printTexture(seed,ink,true,false,Math.min(2048,printResolution),anisotropy,backDesign==='monogram'?monogramArtwork.image:undefined),[seed,ink,printResolution,anisotropy,backDesign,monogramArtwork])
+  const backGeometry=backDesign==='monogram'?prepared.backMonogram:prepared.back
   useEffect(()=>{onBounds?.([prepared.size.x,prepared.size.y,prepared.size.z])},[prepared,onBounds])
   useEffect(()=>{prepared.material.color.set(shade);invalidate()},[shade,prepared,invalidate])
   useEffect(()=>{elapsed.current=0;clip.constant=reduced||!active?3:-1.5;invalidate()},[asset.id,replay,active,reduced,clip,invalidate])
@@ -123,13 +132,14 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   },[luminousInk,invalidate])
   useEffect(()=>{invalidate();return()=>{front.dispose();glow.dispose()}},[front,glow,invalidate])
   useEffect(()=>()=>back.dispose(),[back])
-  useEffect(()=>()=>{prepared.meshes.forEach(mesh=>mesh.geometry.dispose());prepared.material.dispose();prepared.front?.dispose();prepared.back?.dispose()},[prepared])
+  useEffect(()=>{invalidate()},[back,invalidate])
+  useEffect(()=>()=>{prepared.meshes.forEach(mesh=>mesh.geometry.dispose());prepared.material.dispose();prepared.front?.dispose();prepared.back?.dispose();prepared.backMonogram?.dispose()},[prepared])
   return <group>
     <primitive object={prepared.group} dispose={null}/>
     {prepared.front&&<>
       <mesh geometry={prepared.front} renderOrder={3} raycast={()=>{}}><meshBasicMaterial ref={glowMaterial} map={glow} color={luminousInk} transparent opacity={.22} blending={AdditiveBlending} depthWrite={false} polygonOffset polygonOffsetFactor={-3} polygonOffsetUnits={-3} toneMapped={false} clippingPlanes={[clip]}/></mesh>
       <mesh geometry={prepared.front} renderOrder={4} raycast={()=>{}}><meshBasicMaterial ref={coreMaterial} map={front} color={luminousInk} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} toneMapped={false} clippingPlanes={[clip]}/></mesh>
     </>}
-    {prepared.back&&<mesh geometry={prepared.back} renderOrder={3} raycast={()=>{}}><meshBasicMaterial map={back} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} toneMapped={false} clippingPlanes={[clip]}/></mesh>}
+    {backGeometry&&<mesh geometry={backGeometry} renderOrder={3} raycast={()=>{}}><meshBasicMaterial map={back} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} toneMapped={false} clippingPlanes={[clip]}/></mesh>}
   </group>
 }

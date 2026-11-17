@@ -17,6 +17,7 @@ import { GalaxyBackdrop } from './ui-layer/galaxy-backdrop'
 import { FlatWorldMap } from './ui-layer/flat-world-map'
 
 const SceneCanvas = dynamic(() => import('./canvas/scene-canvas'), { ssr: false })
+const ClothingRailStage = dynamic(() => import('./ui-layer/clothing-rail-stage').then(module=>module.ClothingRailStage), { ssr: false })
 
 export function Experience() {
   const root=useRef<HTMLElement>(null)
@@ -32,7 +33,8 @@ export function Experience() {
   const { stage, ready, setReady, setStage, emblemReady, reducedMotion, mapView, setMapView, zoomMap } = useJourney()
   const inWorld = stage === 'world'
   const transferring = stage === 'garment'
-  const revealed = stage === 'reveal' || transferring || inWorld
+  const onRail = stage === 'rail'
+  const revealed = stage === 'reveal' || onRail || transferring || inWorld
   const flat = mapView === 'flat' && !revealed
   useEffect(() => { if (flat || revealed) setExpanded(false) }, [flat, revealed])
   useEffect(() => {
@@ -74,7 +76,7 @@ export function Experience() {
   useEffect(() => { if (introComplete && stage === 'intro') setStage('q1') }, [introComplete, stage, setStage])
   useEffect(() => {
     if (stage !== 'reveal' || !emblemReady) return
-    const timer = window.setTimeout(() => setStage('garment'), reducedMotion ? 300 : 1400)
+    const timer = window.setTimeout(() => setStage('rail'), reducedMotion ? 300 : 1400)
     return () => window.clearTimeout(timer)
   }, [stage, emblemReady, reducedMotion, setStage])
   useEffect(() => {
@@ -82,7 +84,7 @@ export function Experience() {
     const timer = window.setTimeout(() => setStage('world'), reducedMotion ? 300 : 2800)
     return () => window.clearTimeout(timer)
   }, [stage, reducedMotion, setStage])
-  return <main ref={root} className={`cosmic-experience guided-experience${!revealed ? ' is-map-stage' : ''}${flat?' is-flat-layout':''}${inWorld||transferring?' is-garment-world':''}`} data-lighting="night">
+  return <main ref={root} className={`cosmic-experience guided-experience${!revealed ? ' is-map-stage' : ''}${flat?' is-flat-layout':''}${inWorld||transferring?' is-garment-world':''}${onRail?' is-rail-stage':''}`} data-lighting="night">
     <BrandIntro ready={ready} complete={introComplete} onTextureReady={setBrandCanvas} onComplete={()=>{setMapView('globe');setIntroComplete(true);setLogoDocked(true)}}/>
     {webgl!==null&&<GalaxyBackdrop/>}
     <div ref={expandedView} className={`globe-view-container${expanded ? ' is-expanded' : ''}`} role={expanded ? 'dialog' : undefined} aria-modal={expanded ? true : undefined} aria-label={expanded ? 'Expanded globe explorer' : undefined} onKeyDown={event => {
@@ -97,10 +99,10 @@ export function Experience() {
     }}>
       {expanded && <button type="button" className="expanded-globe-close" onClick={() => setExpanded(false)} aria-label="Close expanded globe"><X size={19}/></button>}
       {expanded && <div className="expanded-globe-zoom-controls" role="group" aria-label="Expanded globe zoom"><button type="button" aria-label="Zoom in expanded globe" title="Zoom in" onClick={() => zoomMap('in')}><Plus size={19}/></button><button type="button" aria-label="Zoom out expanded globe" title="Zoom out" onClick={() => zoomMap('out')}><Minus size={19}/></button></div>}
-      <div className={`cosmic-canvas globe-scene${flat?' is-inactive':''}`} inert={!introComplete||flat} aria-hidden={flat}>{webgl&&<SceneCanvas expanded={expanded} active={!flat} showBrand={!revealed} brandCanvas={brandCanvas} brandVisible={introComplete}/>}</div>
+      <div className={`cosmic-canvas globe-scene${flat||onRail?' is-inactive':''}`} inert={!introComplete||flat||onRail} aria-hidden={flat||onRail}>{webgl&&<SceneCanvas expanded={expanded} active={!flat&&!onRail} showBrand={!revealed} brandCanvas={brandCanvas} brandVisible={introComplete}/>}</div>
     </div>
     {flat&&<div className="cosmic-canvas flat-scene" inert={!introComplete}><section className="flat-map-viewport" aria-label="Flat world map"><FlatWorldMap/></section></div>}
-    {!inWorld&&!transferring&&<div className="space-vignette"/>}
+    {!inWorld&&!transferring&&!onRail&&<div className="space-vignette"/>}
     <ClientDialogs enabled={introComplete && !expanded}/>
     <MusicToggle enabled={logoDocked}/>
     <div className={`experience-content${introComplete ? ' is-entered' : ''}${inWorld || transferring ? ' is-garment-world' : ''}`} inert={!introComplete || expanded} aria-hidden={!introComplete || expanded}>
@@ -114,6 +116,7 @@ export function Experience() {
         <GalaxyPicker/></div></div>
       </>}
       {(inWorld || transferring) && <GarmentWorld />}
+      {onRail && <ClothingRailStage />}
       {!ready && webgl !== false && <div className="scene-loading" role="status">Gathering your universe<span>•••</span></div>}
       {webgl === false && <p className="webgl-notice">3D preview is unavailable on this device. You can still choose your journey coordinates.</p>}
     </div>

@@ -28,7 +28,7 @@ export default function SceneCanvas({expanded=false,active=true,showBrand=false,
   const isMobile = useJourney((s) => s.isMobile)
   const stage = useJourney((s) => s.stage)
   const mapView = useJourney(s => s.mapView)
-  const flat = mapView === 'flat' && !['reveal', 'garment', 'world'].includes(stage)
+  const flat = mapView === 'flat' && !['reveal', 'rail', 'garment', 'world'].includes(stage)
   const showBloom = !isMobile && (stage === 'reveal' || stage === 'garment' || stage === 'world')
   return (
     <Canvas key="local-earth-jpeg-v2" frameloop={active?'always':'never'} dpr={isMobile ? 1 : 1.25} camera={{ position: [0, 0.7, 8.7], fov: 43 }} gl={{ antialias: true, alpha: true }}>

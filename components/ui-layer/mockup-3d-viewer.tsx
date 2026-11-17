@@ -7,6 +7,19 @@ import { FileLoader, PerspectiveCamera } from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import { ObjGarment } from '../canvas/obj-garment'
 import type { MockupAsset } from '@/lib/mockups'
+import { useJourney } from '@/lib/store'
+
+function BackDesignView({distance}:{distance:number}) {
+  const design=useJourney(s=>s.backDesign)
+  const previous=useRef(design)
+  const {camera,invalidate}=useThree()
+  useEffect(()=>{
+    if(previous.current===design)return
+    previous.current=design
+    camera.position.set(0,0,-distance);camera.lookAt(0,0,0);invalidate()
+  },[design,camera,distance,invalidate])
+  return null
+}
 
 class ModelBoundary extends Component<{children:ReactNode;retry:()=>void},{failed:boolean}> {
   state={failed:false}
@@ -49,6 +62,7 @@ export default function Mockup3DViewer({asset,color,seed,replay,active=true}:{as
           <ObjGarment asset={asset} color={color} seed={seed} replay={replay} active={active} onBounds={modelReady}/>
         </Suspense>
         <FitCamera reset={reset} bounds={bounds} onFit={setDistance}/>
+        <BackDesignView distance={distance}/>
         <OrbitControls makeDefault enabled={active} enablePan={false} enableZoom minDistance={distance*.28} maxDistance={distance*1.8} minPolarAngle={.15} maxPolarAngle={Math.PI-.15} enableDamping dampingFactor={.08} rotateSpeed={.65} zoomSpeed={.7}/>
       </Canvas>
     </ModelBoundary>

@@ -9,10 +9,10 @@ import { GALAXY_BACKGROUNDS } from './galaxy-backgrounds'
 import type { MapView } from './geo'
 import { journeySelection, type JourneyStep } from './journey-flow'
 
-export type Stage = 'intro' | 'network' | 'q1' | 'q2' | 'reveal' | 'garment' | 'world'
+export type Stage = 'intro' | 'network' | 'q1' | 'q2' | 'reveal' | 'rail' | 'garment' | 'world'
 export type Lighting = 'day' | 'night'
 
-export const STAGES: readonly Stage[] = ['intro', 'network', 'q1', 'q2', 'reveal', 'garment', 'world']
+export const STAGES: readonly Stage[] = ['intro', 'network', 'q1', 'q2', 'reveal', 'rail', 'garment', 'world']
 
 export const STAGE_LABELS: Record<Stage, string> = {
   intro: 'Entry',
@@ -20,6 +20,7 @@ export const STAGE_LABELS: Record<Stage, string> = {
   q1: 'Origin',
   q2: 'Continuation',
   reveal: 'Your mark',
+  rail: 'Explore the rail',
   garment: 'The garment',
   world: 'World',
 }
@@ -35,6 +36,8 @@ type JourneyState = {
   saveClientProfile:(profile:ClientProfile,locationSource?:ClientLocationSource)=>void
   mockupId: string
   mockupColor: string
+  backDesign: 'prvlg' | 'monogram'
+  setBackDesign: (design: 'prvlg' | 'monogram') => void
   monogramColor: string
   setMonogramColor: (color: string) => void
   setMockup: (id: string) => void
@@ -86,6 +89,8 @@ export const useJourney = create<JourneyState>((set, get) => ({
   saveClientProfile:(clientProfile,profileLocationSource='manual')=>{set({clientProfile,profileLocationSource,profileOpen:false});get().setStage('reveal')},
   mockupId: 'original-tshirt',
   mockupColor: 'original',
+  backDesign: 'prvlg',
+  setBackDesign: (backDesign) => set({backDesign}),
   monogramColor: '#63ff34',
   setMonogramColor: (monogramColor) => set({monogramColor}),
   setMockup: (mockupId) => set({mockupId}),
@@ -123,7 +128,7 @@ export const useJourney = create<JourneyState>((set, get) => ({
   setStage: (stage) => {
     if (stage === 'reveal' && get().journeyStep !== 'connected') return
     if (stage === 'reveal' && !get().clientProfile) {get().requestEmblem();return}
-    if ((stage === 'reveal' || stage === 'garment' || stage === 'world') && (!get().origin || !get().destination)) return
+    if ((stage === 'reveal' || stage === 'rail' || stage === 'garment' || stage === 'world') && (!get().origin || !get().destination)) return
     const current = get()
     const creating = stage === 'reveal' && current.stage !== 'reveal'
     const freshSeed = creating ? hashString(`${current.origin}|${current.destination}|${current.emblemGeneration+1}|${globalThis.crypto.getRandomValues(new Uint32Array(1))[0]}`) : current.emblemSeed
@@ -137,7 +142,7 @@ export const useJourney = create<JourneyState>((set, get) => ({
   },
   selectLocation: (id) => {
     const s = get()
-    if (s.stage === 'reveal' || s.stage === 'garment' || s.stage === 'world') return
+    if (s.stage === 'reveal' || s.stage === 'rail' || s.stage === 'garment' || s.stage === 'world') return
     const selection = journeySelection(s.journeyStep, id, s.origin)
     if (selection) set({ ...selection, hovered: null })
   },

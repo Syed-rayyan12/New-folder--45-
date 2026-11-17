@@ -2,16 +2,15 @@
 
 import { useFrame,useLoader,useThree } from '@react-three/fiber'
 import { useEffect,useMemo,useRef } from 'react'
-import { AdditiveBlending,Color,Euler,MathUtils,Mesh,MeshBasicMaterial,Quaternion,ShaderMaterial,SphereGeometry,TextureLoader } from 'three'
+import { NormalBlending,Color,Euler,MathUtils,Mesh,MeshBasicMaterial,Quaternion,ShaderMaterial,SphereGeometry,TextureLoader } from 'three'
 import { DecalGeometry } from 'three/examples/jsm/geometries/DecalGeometry.js'
 import { createGlobeBrandSurface } from '@/lib/globe-brand-pose'
 
 export type GlobeBrandTarget={x:number;y:number;width:number}
 
-// Median bright lettering sampled from public/images/match.jpeg.
-// The reference uses a lighter lime ink over the green globe, not white.
-const GLOBE_LOGO_COLOR = '#A1FD83'
-const GLOBE_LOGO_OPACITY = 0.85
+// see.jpeg: dark translucent green ink with a fine, subdued green edge.
+const GLOBE_LOGO_COLOR = '#258d13'
+const GLOBE_LOGO_OPACITY = 0.48
 const brandVertex=`
   varying vec2 vUv; varying vec3 vNormal; varying vec3 vView;
   void main(){vUv=uv;vNormal=normalize(normalMatrix*normal);vec4 view=modelViewMatrix*vec4(position,1.);vView=normalize(-view.xyz);gl_Position=projectionMatrix*view;}
@@ -21,12 +20,14 @@ const brandFragment=`
   varying vec2 vUv;varying vec3 vNormal;varying vec3 vView;
   void main(){
     float mask=texture2D(artwork,vUv).a;
-    vec2 spread=vec2(.004,.007);
-    float halo=(texture2D(artwork,vUv+vec2(spread.x,0.)).a+texture2D(artwork,vUv-vec2(spread.x,0.)).a+texture2D(artwork,vUv+vec2(0.,spread.y)).a+texture2D(artwork,vUv-vec2(0.,spread.y)).a)*.25;
-    if(max(mask,halo)<.01)discard;
-    float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),2.);
-    // Translucent reference-colored light preserves the ocean beneath the mark.
-    gl_FragColor=vec4(inkColor,clamp((mask*(.65+.25*rim)+halo*.16)*inkOpacity,0.,.82));
+    vec2 spread=max(fwidth(vUv)*.65,vec2(.0007));
+    float inner=min(min(texture2D(artwork,vUv+vec2(spread.x,0.)).a,texture2D(artwork,vUv-vec2(spread.x,0.)).a),min(texture2D(artwork,vUv+vec2(0.,spread.y)).a,texture2D(artwork,vUv-vec2(0.,spread.y)).a));
+    if(mask<.01)discard;
+    float edge=clamp(mask-inner,0.,1.);
+    // Normal alpha blending darkens the Earth through the fill. Additive
+    // blending made the entire monogram luminous and washed out its detail.
+    vec3 ink=mix(inkColor,vec3(.065,.72,.025),edge*.85);
+    gl_FragColor=vec4(ink,mask*inkOpacity);
   }
 `
 
@@ -43,7 +44,7 @@ export function GlobeBrand({orientation,canvas,visible=true,onTarget}:{orientati
     sphere.geometry.dispose();sphere.material.dispose()
     return geometry
   },[pose])
-  // Cropped alpha mask from monogram.png; the shader preserves the lime ink.
+  // Preserve the exact monogram silhouette from the supplied artwork.
   const texture=useLoader(TextureLoader,'/images/monogram-globe.png')
   // This custom shader writes display color directly, like the Earth's shader.
   const uniforms=useMemo(()=>({artwork:{value:texture},inkColor:{value:new Color(GLOBE_LOGO_COLOR).convertLinearToSRGB()},inkOpacity:{value:0}}),[texture])
@@ -58,5 +59,5 @@ export function GlobeBrand({orientation,canvas,visible=true,onTarget}:{orientati
     const target={x:(minX+maxX)/2,y:(minY+maxY)/2,width:maxX-minX},last=lastTarget.current
     if(target.width>0&&(!last||Math.abs(target.x-last.x)>.5||Math.abs(target.y-last.y)>.5||Math.abs(target.width-last.width)>.5)){lastTarget.current=target;onTarget(target)}
   })
-  return <mesh ref={mesh} geometry={geometry} renderOrder={4} raycast={()=>{}}><shaderMaterial ref={material} uniforms={uniforms} vertexShader={brandVertex} fragmentShader={brandFragment} blending={AdditiveBlending} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} toneMapped={false}/></mesh>
+  return <mesh ref={mesh} geometry={geometry} renderOrder={4} raycast={()=>{}}><shaderMaterial ref={material} uniforms={uniforms} vertexShader={brandVertex} fragmentShader={brandFragment} blending={NormalBlending} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} toneMapped={false}/></mesh>
 }

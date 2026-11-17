@@ -115,7 +115,7 @@ export function CosmicWorld({showBrand=false,brandCanvas,brandVisible=true,onBra
     return [...all.values()]
   }, [origin, destination])
   const personal = useMemo(() => origin && destination ? routeSegments(getLocation(origin), getLocation(destination), mapView) : [], [origin, destination, mapView])
-  const revealed = stage === 'reveal' || stage === 'garment' || stage === 'world'
+  const revealed = stage === 'reveal' || stage === 'rail' || stage === 'garment' || stage === 'world'
   const seed = emblemSeed
   return <>
     {!revealed ? <group ref={globe} quaternion={mapView === 'flat' ? new Quaternion() : fromRotation.current}>
