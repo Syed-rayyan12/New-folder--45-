@@ -55,7 +55,7 @@ export default function Mockup3DViewer({asset,color,seed,replay,active=true}:{as
   const retry=()=>{setLoaded(false);useLoader.clear(OBJLoader,asset.modelSrc!);useLoader.clear(FileLoader,asset.materialSrc!);setAttempt(value=>value+1)}
   return <div ref={host} className="mockup-3d-viewer" role="group" aria-label={`${asset.name}. Drag to rotate, scroll or pinch to zoom, double-click to reset.`} data-model-src={asset.modelSrc} data-model-state={loaded?'ready':'loading'} aria-busy={!loaded} onKeyDown={event=>{if(active)event.stopPropagation()}} onPointerDown={event=>{if(active)event.stopPropagation()}} onDoubleClick={event=>{event.stopPropagation();setReset(value=>value+1)}}>
     <ModelBoundary key={`${asset.id}-${attempt}`} retry={retry}>
-      <Canvas frameloop="demand" dpr={active?2:1} resize={{offsetSize:true}} camera={{position:[0,0,6],fov:35}} gl={{alpha:true,antialias:true}} onCreated={({gl})=>{gl.localClippingEnabled=true;gl.setClearColor(0x000000,0)}}>
+      <Canvas frameloop="demand" dpr={[1,1.5]} resize={{offsetSize:true}} camera={{position:[0,0,6],fov:35}} gl={{alpha:true,antialias:true}} onCreated={({gl})=>{gl.localClippingEnabled=true;gl.setClearColor(0x000000,0)}}>
         <ambientLight intensity={.7}/><hemisphereLight args={['#e3efe0','#273328',1.5]}/>
         <directionalLight position={[3,4,5]} intensity={2.4}/><directionalLight position={[-4,2,1]} intensity={1.1}/><directionalLight position={[1,3,-4]} intensity={2}/>
         <Suspense fallback={<Html center><span className="mockup-model-loading" role="status">Loading 3D garment...</span></Html>}>

@@ -83,7 +83,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   },[monogramColor])
   const invalidate=useThree(s=>s.invalidate)
   const gl=useThree(s=>s.gl)
-  const printResolution=Math.min(4096,gl.capabilities.maxTextureSize)
+  const printResolution=Math.min(2048,gl.capabilities.maxTextureSize)
   const anisotropy=gl.capabilities.getMaxAnisotropy()
   const elapsed=useRef(0)
   const clip=useMemo(()=>new Plane(new Vector3(0,1,0),3),[])

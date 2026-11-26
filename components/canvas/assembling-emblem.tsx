@@ -60,6 +60,6 @@ export function AssemblingEmblem({ seed }: { seed: number }) {
     }
   })
   return <group ref={root} scale={0.95}>{emblem.strokes.map((stroke,i)=><DrawStroke key={i} stroke={stroke} elapsed={elapsed} />)}
-    {stage==='reveal'&&<Html center position={[0,-2.25,0]} style={{pointerEvents:'none'}}><div className="emblem-progress" role="status"><span>{complete?'YOUR SACRED SIGNATURE':'DRAWING YOUR SACRED EMBLEM'}</span><small>{emblem.name} · {complete?'Entering the garment world…':'Circles. Symmetry. Your connection.'}</small></div></Html>}
+    {stage==='reveal'&&<Html fullscreen style={{pointerEvents:'none'}}><div className="emblem-progress-stage"><div className="emblem-progress" role="status"><span>{complete?'YOUR SACRED SIGNATURE':'DRAWING YOUR SACRED EMBLEM'}</span><small>{emblem.name} · {complete?'Entering the garment world…':'Circles. Symmetry. Your connection.'}</small></div></div></Html>}
   </group>
 }
