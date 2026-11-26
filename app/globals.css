@@ -404,3 +404,9 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .emblem-progress-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;pointer-events:none}.emblem-progress-stage .emblem-progress{min-width:0;width:min(100%,520px);padding:24px 28px;text-align:center;border:1px solid #a8ff8566;border-radius:14px;background:#061009e8;box-shadow:0 12px 60px #0009,0 0 28px #67f16325;backdrop-filter:blur(12px)}.emblem-progress-stage .emblem-progress>span{color:#d9ffca;font-size:clamp(14px,2vw,21px);font-weight:700;line-height:1.5;letter-spacing:2px;text-shadow:0 0 20px #67f16355}.emblem-progress-stage .emblem-progress>small{color:#ecf6e9;opacity:1;font-size:clamp(11px,1.2vw,13px);line-height:1.7;margin-top:12px}
 
 .emblem-complete-overlay{position:fixed;inset:0;z-index:40;transform:none}
+
+/* Completion caption stays below the emblem for the two-second pause. */
+.emblem-progress-stage.emblem-complete-overlay{align-items:flex-end;padding:24px 20px max(80px,calc(env(safe-area-inset-bottom) + 60px))}
+.emblem-complete-overlay .emblem-progress{width:min(100%,520px);padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
+.emblem-complete-overlay .emblem-progress>span{font-size:clamp(14px,2vw,20px);letter-spacing:2.5px;color:#e5ffdb;text-shadow:0 2px 12px #000,0 0 16px #67f16333}
+.emblem-complete-overlay .emblem-progress>small{margin-top:8px;color:#e3eae0;text-shadow:0 2px 8px #000}
