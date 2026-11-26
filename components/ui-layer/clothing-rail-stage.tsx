@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { DEFAULT_MOCKUPS } from "@/lib/mockups";
 import { ArrowRight } from "lucide-react";
 import ClothingRailHero from "@/components/ui/product-rail-gallery";
 import { RAIL_DEMO_ITEMS } from "@/components/ui/demo";
@@ -8,6 +9,7 @@ import { useJourney } from "@/lib/store";
 
 /** The collection interlude: completed emblem → interactive rail → mockups. */
 export function ClothingRailStage() {
+  useEffect(()=>{let cancelled=false;void import('./mockup-3d-viewer').then(module=>{if(!cancelled)module.preloadMockups(DEFAULT_MOCKUPS)});return()=>{cancelled=true}},[]);
   const setStage=useJourney(s=>s.setStage);
   const reduced=useJourney(s=>s.reducedMotion);
   const host=useRef<HTMLDivElement>(null);

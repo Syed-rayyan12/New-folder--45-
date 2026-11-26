@@ -92,7 +92,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
     // requesting nonexistent images, then use a matte physical fabric material.
     const metadata=new MTLLoader().parse(String(materialText),'').materialsInfo
     const first=Object.values(metadata)[0] as {ns?:number}|undefined
-    const material=new MeshStandardMaterial({color:GLOBE_COLOR,roughness:first?.ns?Math.max(.65,Math.sqrt(2/(Number(first.ns)+2))):.9,metalness:0,side:DoubleSide,clippingPlanes:[clip]})
+    const material=new MeshStandardMaterial({color:color==='original'?'#171b19':color,roughness:first?.ns?Math.max(.65,Math.sqrt(2/(Number(first.ns)+2))):.9,metalness:0,side:DoubleSide,clippingPlanes:[clip]})
     const group=source.clone(true)
     const bounds=new Box3().setFromObject(group),center=bounds.getCenter(new Vector3()),size=bounds.getSize(new Vector3())
     const scale=2.8/size.y
@@ -104,7 +104,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
     group.updateMatrixWorld(true)
     return {group,meshes,material,size:size.multiplyScalar(scale),front:surfacePrint(meshes),back:surfacePrint(meshes,true),backMonogram:surfacePrint(meshes,true,true)}
   },[source,materialText,clip])
-  const shade=color==='original'?GLOBE_COLOR:color
+  const shade=color==='original'?'#171b19':color
   const ink=backDesignColor
   const front=useMemo(()=>printTexture(seed,'#ffffff',false,false,printResolution,anisotropy),[seed,printResolution,anisotropy])
   const glow=useMemo(()=>printTexture(seed,'#ffffff',false,true,Math.min(2048,printResolution),anisotropy),[seed,printResolution,anisotropy])

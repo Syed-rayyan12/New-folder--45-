@@ -3,7 +3,7 @@
 import { Canvas, useLoader, useThree } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import { Component, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { FileLoader, PerspectiveCamera } from 'three'
+import { FileLoader, PerspectiveCamera, TextureLoader } from 'three'
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js'
 import { ObjGarment } from '../canvas/obj-garment'
 import type { MockupAsset } from '@/lib/mockups'
@@ -67,4 +67,12 @@ export default function Mockup3DViewer({asset,color,seed,replay,active=true}:{as
       </Canvas>
     </ModelBoundary>
   </div>
+}
+
+export function preloadMockups(assets: MockupAsset[]) {
+  for (const asset of assets) {
+    if(asset.modelSrc) useLoader.preload(OBJLoader,asset.modelSrc)
+    if(asset.materialSrc) useLoader.preload(FileLoader,asset.materialSrc)
+  }
+  useLoader.preload(TextureLoader,'/images/monogram-globe.png')
 }

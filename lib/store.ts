@@ -90,7 +90,7 @@ export const useJourney = create<JourneyState>((set, get) => ({
   closeProfile:()=>set({profileOpen:false}),
   saveClientProfile:(clientProfile,profileLocationSource='manual')=>{set({clientProfile,profileLocationSource,profileOpen:false});get().setStage('reveal')},
   mockupId: 'original-tshirt',
-  mockupColor: 'original',
+  mockupColor: '#171b19',
   backDesign: 'prvlg',
   setBackDesign: (backDesign) => set({backDesign}),
   backDesignColor: '#f2f0e8',
