@@ -1,6 +1,5 @@
 ﻿'use client'
 
-import { Html } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { CatmullRomCurve3, Group, MathUtils, Mesh, TubeGeometry } from 'three'
@@ -60,6 +59,5 @@ export function AssemblingEmblem({ seed }: { seed: number }) {
     }
   })
   return <group ref={root} scale={0.95}>{emblem.strokes.map((stroke,i)=><DrawStroke key={i} stroke={stroke} elapsed={elapsed} />)}
-    {stage==='reveal'&&<Html fullscreen style={{pointerEvents:'none'}}><div className="emblem-progress-stage"><div className="emblem-progress" role="status"><span>{complete?'YOUR SACRED SIGNATURE':'DRAWING YOUR SACRED EMBLEM'}</span><small>{emblem.name} · {complete?'Entering the garment world…':'Circles. Symmetry. Your connection.'}</small></div></div></Html>}
   </group>
 }

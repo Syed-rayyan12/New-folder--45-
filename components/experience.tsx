@@ -115,6 +115,7 @@ export function Experience() {
         {!flat && webgl && <button ref={expandTrigger} type="button" className="globe-expand-button" onClick={() => setExpanded(true)} aria-haspopup="dialog"><Maximize2 size={15}/><span>Expand globe</span></button>}
         </div></div>
       </>}
+      {stage === 'reveal' && emblemReady && <div className="emblem-progress-stage emblem-complete-overlay"><div className="emblem-progress" role="status"><span>YOUR SACRED SIGNATURE</span><small>Your emblem is complete.</small></div></div>}
       {(inWorld || transferring) && <GarmentWorld />}
       {onRail && <ClothingRailStage />}
       {!ready && webgl !== false && <div className="scene-loading" role="status">Gathering your universe<span>•••</span></div>}
