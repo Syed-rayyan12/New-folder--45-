@@ -29,7 +29,7 @@ export function LocationPicker({ excludeId, onChoose }: { excludeId: LocationId 
     if (!open || countries.length) return
     const controller = new AbortController()
     setLoading(true); setLoadError('')
-    fetch('/locations/countries.json', { signal: controller.signal }).then(r => { if (!r.ok) throw new Error(); return r.json() }).then(setCountries).catch(() => { if (!controller.signal.aborted) setLoadError('Countries could not load. Please retry.') }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
+    fetch('/locations/countries.json', { signal: controller.signal }).then(r => { if (!r.ok) throw new Error(); return r.json() }).then((rows: Country[]) => setCountries(rows.filter(country => country.iso2 !== 'IL'))).catch(() => { if (!controller.signal.aborted) setLoadError('Countries could not load. Please retry.') }).finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
   }, [open, countries.length, retry])
   useEffect(() => {
@@ -43,7 +43,8 @@ export function LocationPicker({ excludeId, onChoose }: { excludeId: LocationId 
   const allPlaces: Location[] = country ? [
     ...cities.map(([name,lat,lng,region]) => ({ id: placeId(name, country, lat, lng), name, country: [region,country.name].filter(Boolean).join(', '), code: country.code, lat, lng, statement: 'A place in your story.' })),
   ] : countries.length ? countries.map(c => ({ id: placeId(c.name,c,c.lat,c.lng), name:c.name, country:'Choose a country to explore its cities', code:c.code, lat:c.lat, lng:c.lng, statement:'A place in your story.' })) : []
-  const matches = allPlaces.filter(place => (!country || place.id !== excludeId) && `${place.name} ${place.country} ${place.code}`.toLowerCase().includes(query.toLowerCase()))
+  const blocked = /israel|\u05d9\u05e9\u05e8\u05d0\u05dc/i.test(query)
+  const matches = allPlaces.filter(place => !blocked && (!country || place.id !== excludeId) && `${place.name} ${place.country} ${place.code}`.toLowerCase().includes(query.toLowerCase()))
   const options = matches.slice(0, limit)
   const close = () => { setOpen(false); trigger.current?.focus({ preventScroll: true }) }
   const choose = (id: LocationId | 'custom') => { close(); onChoose(id) }
@@ -94,9 +95,10 @@ export function LocationPicker({ excludeId, onChoose }: { excludeId: LocationId 
         <button type="button" role="option" tabIndex={-1} id={`journey-option-${index}`} data-option={index} aria-selected={active === index} onPointerMove={() => setActive(index)} onMouseDown={event => event.preventDefault()} onClick={() => selectOption(index)}><span className="place-country-code">{place.code}</span><span><strong>{place.name}</strong><small>Explore cities</small></span><ChevronRight size={15}/></button>
         <button type="button" className="place-country-pin" disabled={place.id === excludeId} aria-label={'Use ' + place.name + ' as a country point'} title="Use country point" onClick={() => choose(place.id)}><MapPin size={14}/><span>Use country</span></button>
       </div>)}
+      {blocked && <p className="location-picker-empty" role="alert">This location is not available for selection.</p>}
       {loading && <p className="location-picker-empty" role="status">Loading locations...</p>}
       {loadError && <p className="location-picker-empty" role="alert">{loadError} <button type="button" onClick={() => setRetry(n => n + 1)}>Retry</button></p>}
-      {!loading && !loadError && !options.length && <p className="location-picker-empty">{country && !cities.length ? 'No cities listed. Use the country point above or enter coordinates.' : 'No matching locations. Try another spelling.'}</p>}
+      {!blocked && !loading && !loadError && !options.length && <p className="location-picker-empty">{country && !cities.length ? 'No cities listed. Use the country point above or enter coordinates.' : 'No matching locations. Try another spelling.'}</p>}
     </div><button type="button" className="place-custom-action" onClick={() => choose('custom')}><Crosshair size={14}/>Enter exact coordinates<ChevronRight size={14}/></button>
     <div className="location-picker-footer"><span>{country ? cities.length.toLocaleString() + ' CITIES / ' + country.name.toUpperCase() : (countries.length || 250) + ' COUNTRIES & TERRITORIES'}</span><a href="/locations/README.md" target="_blank" rel="noreferrer" aria-label="Location data source and license">DATA / ODbL</a></div></motion.div>}</AnimatePresence>, document.body)}
   </>

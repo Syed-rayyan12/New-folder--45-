@@ -394,3 +394,4 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 @keyframes rail-screen-leave{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-18px)}}
 @keyframes mockup-screen-enter{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.clothing-rail-screen.is-leaving,.mockup-studio{animation:none}}
+.mockup-match-emblem{margin-top:12px;padding:8px 12px;border:1px solid #67f16355;border-radius:6px;background:#67f16318;color:#b9f5aa;font:inherit;font-size:11px;cursor:pointer}.mockup-match-emblem:hover{background:#67f16330}.mockup-match-emblem:focus-visible{outline:2px solid #a8ff85;outline-offset:3px}

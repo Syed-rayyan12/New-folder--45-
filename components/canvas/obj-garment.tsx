@@ -71,6 +71,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   const reduced=useJourney(s=>s.reducedMotion)
   const monogramColor=useJourney(s=>s.monogramColor)
   const backDesign=useJourney(s=>s.backDesign)
+  const backDesignColor=useJourney(s=>s.backDesignColor)
   const monogramArtwork=useLoader(TextureLoader,'/images/monogram-globe.png')
   const glowMaterial=useRef<MeshBasicMaterial>(null)
   const coreMaterial=useRef<MeshBasicMaterial>(null)
@@ -104,7 +105,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
     return {group,meshes,material,size:size.multiplyScalar(scale),front:surfacePrint(meshes),back:surfacePrint(meshes,true),backMonogram:surfacePrint(meshes,true,true)}
   },[source,materialText,clip])
   const shade=color==='original'?GLOBE_COLOR:color
-  const ink=useMemo(()=>{const c=new Color(shade);return c.r*.2126+c.g*.7152+c.b*.0722>.4?'#142417':'#f2f0e8'},[shade])
+  const ink=backDesignColor
   const front=useMemo(()=>printTexture(seed,'#ffffff',false,false,printResolution,anisotropy),[seed,printResolution,anisotropy])
   const glow=useMemo(()=>printTexture(seed,'#ffffff',false,true,Math.min(2048,printResolution),anisotropy),[seed,printResolution,anisotropy])
   const back=useMemo(()=>printTexture(seed,ink,true,false,Math.min(2048,printResolution),anisotropy,backDesign==='monogram'?monogramArtwork.image:undefined),[seed,ink,printResolution,anisotropy,backDesign,monogramArtwork])

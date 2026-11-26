@@ -14,7 +14,7 @@ export const techEarthFragment = `
   varying vec2 vUv;varying vec3 vp;varying vec3 vNormal;varying vec3 vPositionNormal;
   void main(){
     // The upstream shader reads gl_FragColor before setting it; initialize explicitly.
-    vec4 base=vec4(0.,0.,0.,1.);
+    vec4 base=vec4(glowColor * 0.045,1.);
     float rim=pow(max(0.,bias+scale*abs(dot(normalize(vNormal),normalize(vPositionNormal)))),power);
     if(vp.y>time && vp.y<time+20.){
       float t=smoothstep(0.,.8,(1.-abs(.5-(vp.y-time)/20.))/3.);

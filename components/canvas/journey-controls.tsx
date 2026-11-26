@@ -1,6 +1,6 @@
 'use client'
 
-import { OrbitControls } from '@react-three/drei'
+import { OrbitControls, TrackballControls } from '@react-three/drei'
 import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef, type ComponentRef } from 'react'
 import { MOUSE, TOUCH, OrthographicCamera, PerspectiveCamera, Vector3 } from 'three'
@@ -24,7 +24,9 @@ export function JourneyControls({ expanded = false }: { expanded?: boolean }) {
   const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * size.width / Math.max(1, size.height))
   const globeFitDistance = GLOBE_RADIUS * (expanded ? 1.015 : 1.06) / Math.sin(Math.min(verticalFov, horizontalFov) / 2)
   const globeMinDistance = globeFitDistance
-  const controls = useRef<ComponentRef<typeof OrbitControls>>(null)
+  const orbit = useRef<ComponentRef<typeof OrbitControls>>(null)
+  const trackball = useRef<ComponentRef<typeof TrackballControls>>(null)
+  const controls = flat || showroom ? orbit : trackball
   const flight = useRef({ from: new Vector3(), to: new Vector3(), progress: 1 })
   const fitDistance = () => {
     if (camera instanceof OrthographicCamera) return 20
@@ -50,7 +52,7 @@ export function JourneyControls({ expanded = false }: { expanded?: boolean }) {
     if (!zoomCommand.sequence || !controls.current || showroom) return
     flight.current.progress = 1
     const control = controls.current
-    if(zoomCommand.action==='reset'){control.target.set(0,0,0);if(camera instanceof OrthographicCamera){camera.zoom=fitZoom;camera.position.set(0,0,20);camera.updateProjectionMatrix()}else camera.position.set(0,0,Math.max(8.7,globeFitDistance));control.update();return}
+    if(zoomCommand.action==='reset'){camera.up.set(0,1,0);control.target.set(0,0,0);if(camera instanceof OrthographicCamera){camera.zoom=fitZoom;camera.position.set(0,0,20);camera.updateProjectionMatrix()}else camera.position.set(0,0,Math.max(8.7,globeFitDistance));control.update();return}
     if (camera instanceof OrthographicCamera) {
       camera.zoom = Math.max(fitZoom * 0.35, Math.min(fitZoom * 50, camera.zoom * (zoomCommand.action === 'in' ? 1.15 : 1 / 1.15)))
       camera.updateProjectionMatrix()
@@ -71,6 +73,7 @@ export function JourneyControls({ expanded = false }: { expanded?: boolean }) {
     camera.position.lerpVectors(state.from, state.to, t*t*(3-2*t))
     controls.current?.update()
   })
-  return <OrbitControls enabled={stage!=='intro'} ref={controls} makeDefault enablePan={flat && !showroom} screenSpacePanning enableRotate={!flat && !showroom} mouseButtons={flat ? { LEFT: MOUSE.PAN, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN } : { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} touches={flat ? { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_PAN } : { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }} enableZoom={!showroom} minZoom={fitZoom * 0.35} maxZoom={fitZoom * 50} minDistance={flat ? 0.3 : showroom || stage === 'reveal' ? GLOBE_RADIUS + 0.15 : globeMinDistance} maxDistance={flat ? 70 : Math.max(18, globeFitDistance * 1.5)} minAzimuthAngle={flat ? 0 : -Infinity} maxAzimuthAngle={flat ? 0 : Infinity} minPolarAngle={flat ? Math.PI / 2 : 0} maxPolarAngle={flat ? Math.PI / 2 : Math.PI} zoomSpeed={0.45} enableDamping dampingFactor={0.06} autoRotate={false} autoRotateSpeed={0.3} rotateSpeed={0.45} onStart={() => { flight.current.progress = 1 }} />
+  if (!flat && !showroom) return <TrackballControls ref={trackball} makeDefault enabled={stage!=='intro'} noPan minDistance={stage==='reveal'?GLOBE_RADIUS+.15:globeMinDistance} maxDistance={Math.max(18,globeFitDistance*1.5)} rotateSpeed={2} zoomSpeed={.45} staticMoving={reducedMotion} dynamicDampingFactor={.12} onStart={()=>{flight.current.progress=1}} />
+  return <OrbitControls enabled={stage!=='intro'} ref={orbit} makeDefault enablePan={flat && !showroom} screenSpacePanning enableRotate={!flat && !showroom} mouseButtons={flat ? { LEFT: MOUSE.PAN, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN } : { LEFT: MOUSE.ROTATE, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN }} touches={flat ? { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_PAN } : { ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }} enableZoom={!showroom} minZoom={fitZoom * 0.35} maxZoom={fitZoom * 50} minDistance={flat ? 0.3 : showroom || stage === 'reveal' ? GLOBE_RADIUS + 0.15 : globeMinDistance} maxDistance={flat ? 70 : Math.max(18, globeFitDistance * 1.5)} minAzimuthAngle={flat ? 0 : -Infinity} maxAzimuthAngle={flat ? 0 : Infinity} minPolarAngle={flat ? Math.PI / 2 : 0} maxPolarAngle={flat ? Math.PI / 2 : Math.PI} zoomSpeed={0.45} enableDamping dampingFactor={0.06} autoRotate={false} autoRotateSpeed={0.3} rotateSpeed={0.45} onStart={() => { flight.current.progress = 1 }} />
 }
 

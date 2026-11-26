@@ -73,11 +73,11 @@ export const Earth = memo(function Earth() {
   </mesh>
   return <group>
     <mesh onPointerOver={e=>e.stopPropagation()} onPointerMove={e=>e.stopPropagation()} onClick={e=>e.stopPropagation()}>
-      <sphereGeometry args={[2,isMobile?48:64,isMobile?40:64]}/>
+      <sphereGeometry args={[2,128,64]}/>
       <shaderMaterial uniforms={uniforms} vertexShader={techEarthVertex} fragmentShader={techEarthFragment} toneMapped={false}/>
     </mesh>
     <sprite scale={[4.3,4.3,1]} raycast={()=>{}}><spriteMaterial map={glow} color={GLOBE_COLOR} transparent opacity={.1} depthWrite={false} blending={AdditiveBlending}/></sprite>
-    <mesh raycast={()=>{}}><sphereGeometry args={[2.002,48,40]}/><shaderMaterial vertexShader={atmosphereVertex} fragmentShader={atmosphereFragment} transparent depthWrite={false}/></mesh>
+    <mesh raycast={()=>{}}><sphereGeometry args={[2.012,128,64]}/><shaderMaterial vertexShader={atmosphereVertex} fragmentShader={atmosphereFragment} transparent depthWrite={false}/></mesh>
     <points geometry={geometry} raycast={()=>{}}><pointsMaterial color={GLOBE_COLOR} size={.012} transparent opacity={.2} depthWrite={false} blending={AdditiveBlending}/></points>
     <OrbitalRing radius={2.6} tilt={0} color={GLOBE_COLOR} offset={.3}/>
     <OrbitalRing radius={3.12} tilt={Math.PI/6} color={GLOBE_COLOR} offset={2.1}/>

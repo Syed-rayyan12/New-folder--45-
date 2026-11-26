@@ -109,11 +109,11 @@ export function Experience() {
       {!revealed && <>
 
         {introComplete && <GuidedJourney canReveal={Boolean(webgl && ready)} />}
-        <div className="map-top-controls">{webgl&&<div className="map-view-toggle" role="group" aria-label="Switch between globe and flat map"><button type="button" aria-label="Original globe" title="Original globe" aria-pressed={mapView === 'globe'} onClick={()=>void switchView('globe')}><Globe2 size={14} /><span>Original Globe</span></button><button type="button" aria-label="Flat world map" title="Flat world map" aria-pressed={mapView === 'flat'} onClick={()=>void switchView('flat')}><Map size={14} /><span>Flat Map</span></button></div>}
+        <div className="map-top-controls">
         <div className="map-secondary-controls">
         {webgl&&<div className="map-zoom-controls" role="group" aria-label="Map zoom and reset controls"><button type="button" aria-label="Zoom in" title="Zoom in" onClick={()=>zoomMap('in')}><Plus size={16}/></button><button type="button" aria-label="Zoom out" title="Zoom out" onClick={()=>zoomMap('out')}><Minus size={16}/></button><button type="button" aria-label="Reset map view" title="Reset map view" onClick={()=>zoomMap('reset')}><RotateCcw size={14}/></button></div>}
         {!flat && webgl && <button ref={expandTrigger} type="button" className="globe-expand-button" onClick={() => setExpanded(true)} aria-haspopup="dialog"><Maximize2 size={15}/><span>Expand globe</span></button>}
-        <GalaxyPicker/></div></div>
+        </div></div>
       </>}
       {(inWorld || transferring) && <GarmentWorld />}
       {onRail && <ClothingRailStage />}

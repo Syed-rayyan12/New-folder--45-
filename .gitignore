@@ -22,3 +22,8 @@ node_modules
 .env.local
 
 .reference/
+
+# Local caches, isolated worktrees, and generated Next.js types
+/.upgrade-cache/
+/.worktrees/
+/next-env.d.ts

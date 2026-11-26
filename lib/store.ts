@@ -38,6 +38,8 @@ type JourneyState = {
   mockupColor: string
   backDesign: 'prvlg' | 'monogram'
   setBackDesign: (design: 'prvlg' | 'monogram') => void
+  backDesignColor: string
+  setBackDesignColor: (color: string) => void
   monogramColor: string
   setMonogramColor: (color: string) => void
   setMockup: (id: string) => void
@@ -91,6 +93,8 @@ export const useJourney = create<JourneyState>((set, get) => ({
   mockupColor: 'original',
   backDesign: 'prvlg',
   setBackDesign: (backDesign) => set({backDesign}),
+  backDesignColor: '#f2f0e8',
+  setBackDesignColor: (backDesignColor) => set({backDesignColor}),
   monogramColor: '#63ff34',
   setMonogramColor: (monogramColor) => set({monogramColor}),
   setMockup: (mockupId) => set({mockupId}),
