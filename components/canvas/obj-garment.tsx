@@ -52,7 +52,10 @@ function printTexture(seed:number,ink:string,back=false,glow=false,resolution=40
 }
 
 function surfacePrint(meshes:Mesh[],back=false,monogram=false) {
-  const ray=new Raycaster(new Vector3(back?0:.28,back?.38:.42,back?-3:3),new Vector3(0,0,back?1:-1))
+  // Positive X is the wearer's left. Project onto the outer upper sleeve.
+  const ray=back
+    ?new Raycaster(new Vector3(0,.38,-3),new Vector3(0,0,1))
+    :new Raycaster(new Vector3(3,.65,.08),new Vector3(-1,0,0))
   const hit=ray.intersectObjects(meshes,false)[0]
   if(!hit?.face)return null
   const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
@@ -61,7 +64,7 @@ function surfacePrint(meshes:Mesh[],back=false,monogram=false) {
   const right=new Vector3().crossVectors(new Vector3(0,1,0),normal).normalize()
   const up=new Vector3().crossVectors(normal,right).normalize()
   const rotation=new Euler().setFromRotationMatrix(new Matrix4().makeBasis(right,up,normal))
-  return new DecalGeometry(hit.object as Mesh,hit.point,rotation,new Vector3(back?(monogram?.65:1):.44,back?(monogram?.65*1166/1046:.588):.44,.18))
+  return new DecalGeometry(hit.object as Mesh,hit.point,rotation,new Vector3(back?(monogram?.65:1):.32,back?(monogram?.65*1166/1046:.588):.32,.18))
 }
 
 /** The supplied OBJ geometry, normalized without changing the source asset. */
