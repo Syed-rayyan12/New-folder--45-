@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeft, ArrowRight, Maximize2, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, X } from 'lucide-react'
 import { DEFAULT_MOCKUPS, GARMENT_COLORS, type MockupAsset } from '@/lib/mockups'
 import { useJourney } from '@/lib/store'
+import { WaitlistCard } from './waitlist-card'
 import { MockupCarousel } from './mockup-carousel'
 
 function BackDesignTabs() {
@@ -43,12 +44,14 @@ export function GarmentWorld() {
     {name:'Orange',value:'#ff7834'},{name:'Red',value:'#ff3d4d'},
   ]:GARMENT_COLORS
   const [replay,setReplay]=useState(0)
+  const [waitlist,setWaitlist]=useState(false)
   const [open,setOpen]=useState(false)
   const dialog=useRef<HTMLDialogElement>(null)
   const heading=useRef<HTMLHeadingElement>(null)
   useEffect(()=>{heading.current?.focus({preventScroll:true})},[])
   useEffect(()=>{if(open)dialog.current?.showModal()},[open])
   const asset=assets.find(item=>item.id===selected)||assets[0]
+  if(waitlist)return <WaitlistCard onBack={()=>setWaitlist(false)}/>
   if(!origin||!destination)return null
   const choose=(item:MockupAsset)=>{setSelected(item.id);setReplay(value=>value+1)}
   const carousel=<MockupCarousel assets={assets} asset={asset} color={color} seed={emblemSeed} replay={replay} onChoose={choose}/>
@@ -60,8 +63,9 @@ export function GarmentWorld() {
       {editingDesign&&<button type="button" className="mockup-match-emblem" onClick={()=>setBackDesignColor(monogramColor)}>Match emblem color</button>}
       {editingMonogram&&<p className="monogram-glow-caption">Self-lit glow follows your color.</p>}
     </aside>
-    <div className={`mockup-center-stage${asset.modelSrc?' has-3d-model':''}${open?' is-hidden':''}`}>{carousel}<button type="button" className="mockup-expand" onClick={()=>setOpen(true)}><Maximize2 size={17}/> Enlarge preview</button></div>
+    <div className={`mockup-center-stage${asset.modelSrc?' has-3d-model':''}${open?' is-hidden':''}`}>{carousel}</div>
     <aside className="mockup-change-panel"><button type="button" className="mockup-change-button" onClick={()=>choose(assets[(assets.findIndex(item=>item.id===asset.id)+1)%assets.length])}>Change mockup <ArrowRight size={16}/></button></aside>
+    <button type="button" className="journey-next mockup-waitlist-next" onClick={()=>setWaitlist(true)}>Join the waitlist <ArrowRight size={16}/></button>
     <nav className="mockup-globe-return" aria-label="Globe navigation"><button type="button" onClick={()=>setStage('q2')}><ArrowLeft size={12}/> Back to my globe</button></nav>
     {open&&<dialog ref={dialog} className="mockup-inspection" onCancel={()=>setOpen(false)} onClose={()=>setOpen(false)} aria-labelledby="mockup-inspection-title"><header><div><h2 id="mockup-inspection-title">{asset.name}</h2></div><button type="button" onClick={()=>setOpen(false)} aria-label="Close mockup"><X size={20}/></button></header><div className="mockup-inspection-image">{carousel}</div><footer><BackDesignTabs/><label className="mockup-modal-color">Garment <input aria-label="Preview garment color" type="color" value={color==='original'?'#67f163':color} onChange={event=>setColor(event.target.value)}/></label><label className="mockup-modal-color">Emblem <input aria-label="Preview emblem color" type="color" value={monogramColor} onChange={event=>setMonogramColor(event.target.value)}/></label><label className="mockup-modal-color">{designLabel} <input aria-label={`Preview ${designLabel} color`} type="color" value={backDesignColor} onChange={event=>setBackDesignColor(event.target.value)}/></label><button type="button" onClick={()=>choose(assets[(assets.findIndex(item=>item.id===asset.id)+1)%assets.length])}>Change mockup</button></footer></dialog>}
   </section>

@@ -76,7 +76,7 @@ export function Experience() {
   useEffect(() => { if (introComplete && stage === 'intro') setStage('q1') }, [introComplete, stage, setStage])
   useEffect(() => {
     if (stage !== 'reveal' || !emblemReady) return
-    const timer = window.setTimeout(() => setStage('rail'), 2000)
+    const timer = window.setTimeout(() => setStage('rail'), 5000)
     return () => window.clearTimeout(timer)
   }, [stage, emblemReady, reducedMotion, setStage])
   useEffect(() => {

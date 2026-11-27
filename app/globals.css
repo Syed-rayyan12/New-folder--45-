@@ -410,3 +410,19 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}
 .emblem-complete-overlay .emblem-progress{width:min(100%,520px);padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
 .emblem-complete-overlay .emblem-progress>span{font-size:clamp(14px,2vw,20px);letter-spacing:2.5px;color:#e5ffdb;text-shadow:0 2px 12px #000,0 0 16px #67f16333}
 .emblem-complete-overlay .emblem-progress>small{margin-top:8px;color:#e3eae0;text-shadow:0 2px 8px #000}
+
+.rail-continue.journey-next,.mockup-waitlist-next.journey-next,.waitlist-card .journey-next{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:46px;padding:13px 20px;border:1px solid #67f163;border-radius:5px;background:#67f163;color:#071009;font-size:12px;font-weight:600;cursor:pointer;transition:background .2s,box-shadow .2s}
+.rail-continue.journey-next:hover,.mockup-waitlist-next:hover,.waitlist-card .journey-next:hover{background:#8aff80;box-shadow:0 0 22px #67f16325}
+.mockup-waitlist-next{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:6;white-space:nowrap}
+.waitlist-screen{position:absolute;inset:0;z-index:8;display:grid;place-items:center;padding:80px 24px;overflow-y:auto;background:radial-gradient(ellipse at center,#10291bdd,#040c08ee)}
+.waitlist-card{width:min(100%,500px);padding:38px;border:1px solid #67f16338;border-radius:18px;background:#08130fef;box-shadow:0 24px 100px #0007;text-align:center;color:#eaf3e9}
+.waitlist-icon{display:inline-grid;place-items:center;width:62px;height:62px;border:1px solid #67f16355;border-radius:50%;color:#a8ff85;background:#67f1630c}
+.waitlist-eyebrow{font:10px/1.6 JetBrainsMono,monospace;letter-spacing:2px;color:#9eccaa;margin:24px 0 14px}
+.waitlist-card h1{font-size:clamp(26px,4vw,36px);line-height:1.15;letter-spacing:-1px;margin:0;outline:none}
+.waitlist-card>p:not(.waitlist-eyebrow){font-size:14px;line-height:1.8;color:#b0c1b4;margin:18px 0 26px}
+.waitlist-card form{display:grid;gap:12px;text-align:left}.waitlist-card label{font-size:12px;color:#d5e2d6}.waitlist-card input{width:100%;min-height:48px;border:1px solid #829a8555;border-radius:5px;padding:12px;background:#030b07;color:white}.waitlist-card input:focus-visible{outline:2px solid #67f163;outline-offset:3px}.waitlist-card small{font-size:11px;line-height:1.6;color:#9db1a3;text-align:center}.waitlist-card .journey-text-action{display:inline-flex;align-items:center;gap:8px;margin-top:24px;background:none;border:0;color:#c3d3c5;cursor:pointer;padding:10px}.waitlist-confirmation{padding:16px;border:1px solid #67f16344;border-radius:8px;color:#c5f8b6;font-size:13px;line-height:1.8}.waitlist-confirmation svg{vertical-align:middle;margin-right:5px}
+@media(max-width:640px){.mockup-waitlist-next{bottom:76px;left:auto;right:12px;transform:none;font-size:10px;padding:10px 12px}.waitlist-card{padding:28px 22px}.waitlist-screen{padding:75px 18px}}
+
+/* Keep all three mockup color labels on one line. */
+.mockup-color-target{min-width:max-content}
+.mockup-color-target button{flex:1 0 auto;white-space:nowrap;padding-inline:10px}
