@@ -20,7 +20,7 @@ export function WaitlistCard({onBack}:{onBack:()=>void}) {
         <label htmlFor="waitlist-email">Email address</label>
         <input id="waitlist-email" type="email" autoComplete="email" required value={email} placeholder="you@example.com" onChange={event=>setEmail(event.target.value)}/>
         <button type="submit" className="journey-next">Join the waitlist <ArrowRight size={16}/></button>
-        <small>Preview only — your email will not be saved or sent yet.</small>
+        <small>Preview only Â— your email will not be saved or sent yet.</small>
       </form>:<div className="waitlist-confirmation" role="status"><Check size={16}/> Waitlist preview complete. Email delivery is coming soon.</div>}
       <button type="button" className="journey-text-action" onClick={onBack}><ArrowLeft size={14}/>Back to your mockup</button>
     </div>

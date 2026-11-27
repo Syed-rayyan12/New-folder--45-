@@ -51,11 +51,12 @@ function printTexture(seed:number,ink:string,back=false,glow=false,resolution=40
   return texture
 }
 
-function surfacePrint(meshes:Mesh[],back=false,monogram=false) {
+function surfacePrint(meshes:Mesh[],back=false,monogram=false,chest=false) {
   // Positive X is the wearer's left. Project onto the outer upper sleeve.
   const ray=back
     ?new Raycaster(new Vector3(0,.38,-3),new Vector3(0,0,1))
-    :new Raycaster(new Vector3(3,.65,.08),new Vector3(-1,0,0))
+    :chest?new Raycaster(new Vector3(.28,.42,3),new Vector3(0,0,-1))
+    :new Raycaster(new Vector3(3,.8,.08),new Vector3(-1,0,0))
   const hit=ray.intersectObjects(meshes,false)[0]
   if(!hit?.face)return null
   const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld)
@@ -64,7 +65,9 @@ function surfacePrint(meshes:Mesh[],back=false,monogram=false) {
   const right=new Vector3().crossVectors(new Vector3(0,1,0),normal).normalize()
   const up=new Vector3().crossVectors(normal,right).normalize()
   const rotation=new Euler().setFromRotationMatrix(new Matrix4().makeBasis(right,up,normal))
-  return new DecalGeometry(hit.object as Mesh,hit.point,rotation,new Vector3(back?(monogram?.65:1):.32,back?(monogram?.65*1166/1046:.588):.32,.18))
+  const width=back?(monogram?.65:1):chest?(monogram?.28:.38):.32
+  const height=back?(monogram?.65*1166/1046:.588):chest?(monogram?.28*1166/1046:.38*194/330):.32
+  return new DecalGeometry(hit.object as Mesh,hit.point,rotation,new Vector3(width,height,chest||back?.18:.3))
 }
 
 /** The supplied OBJ geometry, normalized without changing the source asset. */
@@ -75,6 +78,7 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   const monogramColor=useJourney(s=>s.monogramColor)
   const backDesign=useJourney(s=>s.backDesign)
   const backDesignColor=useJourney(s=>s.backDesignColor)
+  const brandMonogramColor=useJourney(s=>s.brandMonogramColor)
   const monogramArtwork=useLoader(TextureLoader,'/images/monogram-globe.png')
   const glowMaterial=useRef<MeshBasicMaterial>(null)
   const coreMaterial=useRef<MeshBasicMaterial>(null)
@@ -105,14 +109,16 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
       if(object instanceof Mesh){object.geometry=object.geometry.clone();object.material=material;object.castShadow=true;object.receiveShadow=true;meshes.push(object)}
     })
     group.updateMatrixWorld(true)
-    return {group,meshes,material,size:size.multiplyScalar(scale),front:surfacePrint(meshes),back:surfacePrint(meshes,true),backMonogram:surfacePrint(meshes,true,true)}
+    return {group,meshes,material,size:size.multiplyScalar(scale),front:surfacePrint(meshes),back:surfacePrint(meshes,true),backMonogram:surfacePrint(meshes,true,true),chest:surfacePrint(meshes,false,false,true),chestMonogram:surfacePrint(meshes,false,true,true)}
   },[source,materialText,clip])
   const shade=color==='original'?'#171b19':color
-  const ink=backDesignColor
+  const ink=backDesign==='monogram'?brandMonogramColor:backDesignColor
   const front=useMemo(()=>printTexture(seed,'#ffffff',false,false,printResolution,anisotropy),[seed,printResolution,anisotropy])
   const glow=useMemo(()=>printTexture(seed,'#ffffff',false,true,Math.min(2048,printResolution),anisotropy),[seed,printResolution,anisotropy])
   const back=useMemo(()=>printTexture(seed,ink,true,false,Math.min(2048,printResolution),anisotropy,backDesign==='monogram'?monogramArtwork.image:undefined),[seed,ink,printResolution,anisotropy,backDesign,monogramArtwork])
+  const chest=useMemo(()=>printTexture(seed,backDesign==='prvlg'?brandMonogramColor:backDesignColor,true,false,Math.min(2048,printResolution),anisotropy,backDesign==='prvlg'?monogramArtwork.image:undefined),[seed,backDesign,brandMonogramColor,backDesignColor,printResolution,anisotropy,monogramArtwork])
   const backGeometry=backDesign==='monogram'?prepared.backMonogram:prepared.back
+  const chestGeometry=backDesign==='prvlg'?prepared.chestMonogram:prepared.chest
   useEffect(()=>{onBounds?.([prepared.size.x,prepared.size.y,prepared.size.z])},[prepared,onBounds])
   useEffect(()=>{prepared.material.color.set(shade);invalidate()},[shade,prepared,invalidate])
   useEffect(()=>{elapsed.current=0;clip.constant=reduced||!active?3:-1.5;invalidate()},[asset.id,replay,active,reduced,clip,invalidate])
@@ -136,8 +142,9 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
   },[luminousInk,invalidate])
   useEffect(()=>{invalidate();return()=>{front.dispose();glow.dispose()}},[front,glow,invalidate])
   useEffect(()=>()=>back.dispose(),[back])
+  useEffect(()=>{invalidate();return()=>chest.dispose()},[chest,invalidate])
   useEffect(()=>{invalidate()},[back,invalidate])
-  useEffect(()=>()=>{prepared.meshes.forEach(mesh=>mesh.geometry.dispose());prepared.material.dispose();prepared.front?.dispose();prepared.back?.dispose();prepared.backMonogram?.dispose()},[prepared])
+  useEffect(()=>()=>{prepared.meshes.forEach(mesh=>mesh.geometry.dispose());prepared.material.dispose();prepared.front?.dispose();prepared.back?.dispose();prepared.backMonogram?.dispose();prepared.chest?.dispose();prepared.chestMonogram?.dispose()},[prepared])
   return <group>
     <primitive object={prepared.group} dispose={null}/>
     {prepared.front&&<>
@@ -145,5 +152,6 @@ export function ObjGarment({asset,color,seed,replay,active,onBounds}:{asset:Mock
       <mesh geometry={prepared.front} renderOrder={4} raycast={()=>{}}><meshBasicMaterial ref={coreMaterial} map={front} color={luminousInk} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} polygonOffsetUnits={-4} toneMapped={false} clippingPlanes={[clip]}/></mesh>
     </>}
     {backGeometry&&<mesh geometry={backGeometry} renderOrder={3} raycast={()=>{}}><meshBasicMaterial map={back} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} toneMapped={false} clippingPlanes={[clip]}/></mesh>}
+    {chestGeometry&&<mesh geometry={chestGeometry} renderOrder={3} raycast={()=>{}}><meshBasicMaterial map={chest} transparent depthWrite={false} polygonOffset polygonOffsetFactor={-4} toneMapped={false} clippingPlanes={[clip]}/></mesh>}
   </group>
 }

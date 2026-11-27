@@ -3,6 +3,7 @@ const nextConfig = {
   // Windows sandbox processes cannot fork build workers; threads retain checks.
   experimental: { agentUpgrade: 'security', workerThreads: process.platform === 'win32', cpus: 2 },
   poweredByHeader: false,
+  distDir: process.env.PRVLG_DIST_DIR || '.next',
   // Static assets are served by the CDN, never by the Next.js server function.
   outputFileTracingExcludes: {
     '/*': [
